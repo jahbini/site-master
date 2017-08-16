@@ -1,0 +1,7 @@
+public-*
+sites/*
+site-loader/*
+site-server/*
+mongo*
+*.swp
+*.log
