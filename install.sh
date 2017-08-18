@@ -20,5 +20,5 @@ git clone https://github.com/jahbini/site-server.git
 
 (cd site-server; docker build -t site-server:latest . )
 
-docker-compose up -d
+. ./go.sh
 
