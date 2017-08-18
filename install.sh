@@ -15,6 +15,7 @@ do
 ( cd site-loader; mkdir domains -p; ln -s ../sites/$i domains/$i; ln -s ../public-$i ./public-$i)
 done
 
+(cd site-loader; npm install)
 git clone https://github.com/jahbini/site-server.git
 
 (cd site-server; docker build -t site-server:latest . )
