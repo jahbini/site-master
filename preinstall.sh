@@ -6,4 +6,9 @@ apt-cache policy docker-ce
 sudo apt-get install -y docker-ce
 sudo systemctl status docker
 apt-get install -y docker-compose
-
+# add swap space
+fallocate -l 1G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+#
