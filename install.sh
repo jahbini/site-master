@@ -23,7 +23,7 @@ mkdir /site-master/public-$i
 done
 npm install -g brunch
 (cd site-loader; npm install)
-(cd site-loader; bash brunch-devo)
+(cd site-loader; bash brunch-devo.sh)
 
 (cd site-server; docker build -t site-server:latest . )
 
