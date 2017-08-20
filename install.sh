@@ -18,8 +18,8 @@ do
 mkdir /site-master/public-$i
 ( cd sites ; git clone https://github.com/jahbini/$i.git )
 ( cd site-loader; mkdir domains -p;
- ln -s /site-master/sites/$i domains/$i;
- ln -s /site-master/public-$i ./public-$i)
+ ln -sFt ./domains /site-master/sites/$i;
+ ln -sFt . /site-master/public-$i )
 done
 npm install -g brunch
 (cd site-loader; npm install)
