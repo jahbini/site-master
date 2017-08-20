@@ -1,7 +1,9 @@
 public-*
+.c9/*
 sites/*
 site-loader/*
 site-server/*
 mongo*
+*.tgz
 *.swp
 *.log
