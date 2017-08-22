@@ -1,17 +1,15 @@
 #! /bin/sh
 #
 #install site-master
+# prepares directory structure
+# checks out latest versions from github
+# installs stuff with npm
+# does initial development build of site-loader and site-server
 
 mkdir mongodb -p
 mkdir sites -p
 git clone https://github.com/jahbini/site-server.git
 git clone https://github.com/jahbini/site-loader.git
-
-scp -i /root/.ssh/site-master root@bamboosnow.com:/site-master/images.tgz .
-tar xfz images.tgz
-
-scp -i /root/.ssh/site-master root@bamboosnow.com:/site-master/mongodb.tgz .
-tar xfz mongodb.tgz
 
 for i in stjohnsjim celarien bamboosnow
 do
