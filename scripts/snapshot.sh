@@ -1,6 +1,8 @@
 #! /bin/sh
 #
 #stop, get the mongo database and restart site-master
+# this must be done on the live site just
+# prior to hand-off to new live server
 
 
 (cd /site-master; docker-compose down )
