@@ -12,10 +12,8 @@
   },
   "keywords": [
     "coffeescript",
-    "teact",
-    "rebass",
+    "halvalla",
     "styled-components",
-    "react",
     "no-jsx"
   ],
   "author": "James A. Hinds",
