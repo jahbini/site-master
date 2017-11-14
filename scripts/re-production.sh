@@ -4,6 +4,7 @@
 # in PRODUCTION mode
 # point live DNS to this host and the site is live
 #
+cd /site-master
 swapon /swapfile
 sysctl vm.vfs_cache_pressure=10
 sysctl vm.swappiness=10

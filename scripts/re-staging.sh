@@ -4,7 +4,7 @@
 swapon /swapfile
 sysctl vm.vfs_cache_pressure=10
 sysctl vm.swappiness=10
-
+cd /site-master
 (cd site-loader; docker-compose down )
 export NODE_ENV=production
 #(cd site-loader; tar cfz mongodb.tgz mongodb )
