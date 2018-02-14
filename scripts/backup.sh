@@ -12,4 +12,4 @@
 (cd /site-master; tar cfz mongodb.tgz mongodb )
 
 # restart 
-nohup docker-compose up &
+re-production
