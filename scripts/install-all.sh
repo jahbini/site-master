@@ -25,5 +25,4 @@ npm install -g brunch
 
 (cd site-server; docker build -t site-server:latest . )
 
-. ./up.sh
-
+echo "install complete.  Ready for re-up to initiate"
