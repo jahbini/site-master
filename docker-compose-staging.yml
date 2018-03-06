@@ -2,12 +2,15 @@ version: '2'
      
 services:
   nginx:
-    image: ej52/alpine-nginx-proxy
+    image: bamboojim/docker-nginx:latest
     restart: always
     ports:
       - 80:80
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./public-bamboosnow:/public/bamboosnow
+      - ./public-celarien:/public/celarien
+      - ./public-stjohnsjim:/public/stjohnsjim
 
   bamboosnow:
     image: site-server:latest
@@ -62,6 +65,7 @@ services:
 
   db:
     image: mvertes/alpine-mongo:3.2.4-1
+    restart: always
     volumes:
       - ./mongodb:/data/db
     expose:
