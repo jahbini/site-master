@@ -6,9 +6,15 @@
 # installs stuff with npm
 # does initial development build of site-loader and site-server
 
-mkdir mongodb -p
+# mkdir mongodb -p
+# 
+npm install -g coffee-script@1.12
+npm install -g brunch
+npm install -g purify-css
+# where we need to be
+cd /site-master
 mkdir sites -p
-git clone https://github.com/jahbini/site-server.git
+# git clone https://github.com/jahbini/site-server.git
 git clone https://github.com/jahbini/site-loader.git
 
 for i in stjohnsjim celarien bamboosnow
@@ -19,10 +25,7 @@ mkdir /site-master/public-$i
  ln -sFt ./domains /site-master/sites/$i;
  ln -sFt . /site-master/public-$i )
 done
-npm install -g brunch
+
 (cd site-loader; npm install)
-(cd site-loader; bash brunch-devo.sh)
 
-(cd site-server; docker build -t site-server:latest . )
-
-echo "install complete.  Ready for re-up to initiate"
+echo "install complete.  Ready for up.sh to initiate"
