@@ -1,0 +1,2 @@
+place static assets at this level -- they will be added to the sites browser time assets
+this includes source of coffeescript or javascript

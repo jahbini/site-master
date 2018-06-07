@@ -1,6 +1,7 @@
 public-*
 .c9/*
 sites/*
+site-loader
 site-loader/*
 site-server/*
 mongo*
