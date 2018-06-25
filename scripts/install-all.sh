@@ -8,24 +8,26 @@
 
 # mkdir mongodb -p
 # 
-npm install -g coffee-script@1.12
-npm install -g brunch
-npm install -g purify-css
+sudo npm install -g yarn
+sudo npm install -g coffee-script@1.12
+sudo npm install -g brunch
+sudo npm install -g purify-css
 # where we need to be
-cd /site-master
+cd ~/site-master
 mkdir sites -p
 # git clone https://github.com/jahbini/site-server.git
 git clone https://github.com/jahbini/site-loader.git
 
 for i in stjohnsjim celarien bamboosnow
 do
-mkdir /site-master/public-$i
+mkdir ~/site-master/public-$i
 ( cd sites ; git clone https://github.com/jahbini/$i.git )
+( cd sites/$i ; yarn install )
 ( cd site-loader; mkdir domains -p;
- ln -sFt ./domains /site-master/sites/$i;
- ln -sFt . /site-master/public-$i )
+ ln -sFt ./domains ~/site-master/sites/$i;
+ ln -sFt . ~/site-master/public-$i )
 done
 
-(cd site-loader; npm install)
+(cd site-loader; yarn install)
 
 echo "install complete.  Ready for up.sh to initiate"
