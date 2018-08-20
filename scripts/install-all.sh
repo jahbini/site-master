@@ -18,7 +18,7 @@ mkdir sites -p
 # git clone https://github.com/jahbini/site-server.git
 git clone https://github.com/jahbini/site-loader.git
 
-for i in stjohnsjim celarien bamboosnow
+for i in stjohnsjim celarien bamboosnow 411-source
 do
 mkdir ~/site-master/public-$i
 ( cd sites ; git clone https://github.com/jahbini/$i.git )
