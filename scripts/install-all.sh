@@ -31,6 +31,8 @@ done
 (cd site-loader; yarn install)
 
 sudo certbot --nginx -d celarien.com,www.celarien.com --webroot-path /home/mar1on/site-master/sites/celarien/public
+sudo certbot --nginx -d cambodiancenterforbamboostudies.com,www.cambodiancenterforbamboostudies.com --webroot-path /home/mar1on/site-master/sites/cambodiancenterforbamboostudieS/public
+diancenterforbamboostudies/public
 sudo certbot --nginx -d bamboosnow.com,www.bamboosnow.com --webroot-path /home/mar1on/site-master/sites/bamboosnow/public
 sudo certbot --nginx -d stjohnsjim.com,www.stjohnsjim.com --webroot-path /home/mar1on/site-master/sites/stjohnsjim/public
 sudo certbot --nginx -d 411-source.com,www.411-source.com,lowroller.411-source.com --webroot-path /home/mar1on/site-master/sites/411-source/public

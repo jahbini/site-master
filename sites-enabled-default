@@ -9,6 +9,45 @@ server {
 	}
 }
 server {
+	server_name cambodiancenterforbamboostudies.com www.cambodiancenterforbamboostudies.com;
+	access_log /var/log/nginx/cambodiancenterforbamboostudies.log vhost;
+	root /home/mar1on/site-master/sites/cambodiancenterforbamboostudies/public;
+	location / {
+		try_files $uri $uri.html $uri/index.html =404;
+		error_page 404 /404.html;
+		location /404.html {
+			root /home/mar1on/site-master/sites/cambodiancenterforbamboostudies/public/error;
+		}
+	}
+  listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/cambodiancenterforbamboostudies.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/cambodiancenterforbamboostudies.com/privkey.pem; # managed by Certbot
+  include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+server {
+    if ($host = www.cambodiancenterforbamboostudies.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = cambodiancenterforbamboostudies.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+	listen 80 ;
+	listen [::]:80 ;
+    server_name www.cambodiancenterforbamboostudies.com cambodiancenterforbamboostudies.com;
+    return 404; # managed by Certbot
+
+
+
+
+}
+server {
 	server_name bamboosnow.com www.bamboosnow.com;
 	access_log /var/log/nginx/bamboosnow.log vhost;
 	root /home/mar1on/site-master/sites/bamboosnow/public;
@@ -20,24 +59,41 @@ server {
 		}
 	}
   listen 443 ssl; # managed by Certbot
-  ssl_certificate /etc/letsencrypt/live/www.lowroller.411-source.com/fullchain.pem; # managed by Certbot
-  ssl_certificate_key /etc/letsencrypt/live/www.lowroller.411-source.com/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/bamboosnow.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/bamboosnow.com/privkey.pem; # managed by Certbot
   include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
   ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
 }
 server {
+    if ($host = bamboosnow.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
     if ($host = www.bamboosnow.com) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 	listen 80 ;
 	listen [::]:80 ;
-    server_name www.bamboosnow.com;
+    server_name www.bamboosnow.com bamboosnow.com;
     return 404; # managed by Certbot
+
+
 }
 server {
 	server_name stjohnsjim.com www.stjohnsjim.com;
 	access_log /var/log/nginx/stjohnsjim.log vhost;
 	root /home/mar1on/site-master/sites/stjohnsjim/public;
+  location /wikivault {
+              try_files $uri @fossil;
+        }
+	location @fossil {
+                rewrite ^/wikivault/(.*) /$1 break;
+                include /etc/nginx/proxy_params;
+                proxy_pass http://127.0.0.1:8081;
+        }
 	location / {
 		try_files $uri $uri.html  $uri/index.html =404;
 		error_page 404 /404.html;
@@ -47,19 +103,28 @@ server {
 		}
     listen [::]:443 ssl ipv6only=on; # managed by Certbot
     listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/www.lowroller.411-source.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/www.lowroller.411-source.com/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/stjohnsjim.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/stjohnsjim.com/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
 }
 server {
+    if ($host = stjohnsjim.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
     if ($host = www.stjohnsjim.com) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 	listen 80 ;
 	listen [::]:80 ;
-    server_name www.stjohnsjim.com;
+    server_name www.stjohnsjim.com stjohnsjim.com;
     return 404; # managed by Certbot
+
+
 }
 server {
 	server_name celarien.com www.celarien.com;
@@ -73,35 +138,28 @@ server {
 		}
 	}
     listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/www.lowroller.411-source.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/www.lowroller.411-source.com/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/celarien.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/celarien.com/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
 }
 server {
+    if ($host = celarien.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
     if ($host = www.celarien.com) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 	listen 80 ;
 	listen [::]:80 ;
-    server_name www.celarien.com;
+    server_name www.celarien.com celarien.com;
     return 404; # managed by Certbot
-}
-server {
-	server_name trilby2.ourapps.work www.trilby2.ourapps.work;
-	access_log /var/log/nginx/trilby.log vhost;
-	location / {
-                try_files $uri @nodejs;
-        }
-	location @nodejs {
-                include /etc/nginx/proxy_params;
-                proxy_pass http://127.0.0.1:8080;
-        }
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/trilby2.ourapps.work/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/trilby2.ourapps.work/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
 }
 server {
 	server_name 411-source.com www.411-source.com;
@@ -127,7 +185,7 @@ server {
     } # managed by Certbot
 	listen 80 ;
 	listen [::]:80 ;
-    server_name www.411-source.com;
+	server_name 411-source.com www.411-source.com;
     return 404; # managed by Certbot
 }
 server {
@@ -153,7 +211,7 @@ server {
     } # managed by Certbot
 	listen 80 ;
 	listen [::]:80 ;
-    server_name www.lowroller.411-source.com;
+  server_name www.lowroller.411-source.com; # managed by Certbot
     return 404; # managed by Certbot
 }
 server {
@@ -182,13 +240,4 @@ server {
 	listen [::]:80 ;
   server_name lowroller.411-source.com;
   return 404; # managed by Certbot
-}
-server {
-    if ($host = www.trilby2.ourapps.work) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-	listen 80 ;
-	listen [::]:80 ;
-    server_name www.trilby2.ourapps.work;
-    return 404; # managed by Certbot
 }
