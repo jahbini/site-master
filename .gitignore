@@ -1,6 +1,8 @@
 public-*
+sites-enabled-default
 .c9/*
 sites/*
+newfiles/
 site-loader
 site-loader/*
 site-server/*
@@ -8,3 +10,4 @@ mongo*
 *.tgz
 *.swp
 *.log
+gulp.run

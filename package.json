@@ -1,0 +1,45 @@
+{
+  "name": "site-master",
+  "version": "1.0.0",
+  "description": "gulp conversion of site-ooader from brunch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jahbini/site-master.git"
+  },
+  "keywords": [
+    "web",
+    "publishing",
+    "static",
+    "site",
+    "halvalla"
+  ],
+  "author": "James A. Hinds",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jahbini/site-master/issues"
+  },
+  "homepage": "https://github.com/jahbini/site-master#readme",
+  "dependencies": {
+    "coffeeify": "^3.0.1",
+    "coffeescript": "^2.5.1",
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^7.0.1",
+    "gulp-beautify": "^3.0.0",
+    "gulp-browserify": "^0.5.1",
+    "gulp-coffee": "^3.0.3",
+    "gulp-concat": "^2.6.1",
+    "gulp-debug": "^4.0.0",
+    "gulp-inject-string": "^1.1.2",
+    "gulp-insert": "^0.5.0",
+    "gulp-nunjucks": "^5.0.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-sass": "^4.1.0",
+    "lodash": "^4.17.15",
+    "merge-stream": "^2.0.0"
+  }
+}
