@@ -1,5 +1,6 @@
 # Brunch-config.coffee meta file
 #
+Backbone = require 'backbone'
 _=require 'lodash'
 path = require 'path'
 fs = require 'fs'
@@ -9,19 +10,29 @@ beautify = require('gulp-beautify')
 #browserSync = require('browser-sync').create()
 del = require('del')
 gulp = require('gulp')
+gulpAddSource = require 'gulp-add-src'
 mergeStream = require('merge-stream')
 nunjucks = require('gulp-nunjucks')
 sass = require('gulp-sass')
 inject = require('gulp-inject-string')
 gulpInsert = require 'gulp-insert'
-os = require('os')
-pkg = require('./package.json')
-browserify = require 'gulp-browserify'
-coffee = require 'gulp-coffee'
-coffeeify = require 'coffeeify'
 concat = require 'gulp-concat'
 debug = require 'gulp-debug'
 rename = require 'gulp-rename'
+
+os = require('os')
+pkg = require('./package.json')
+# browserify stuff
+browserify = require 'browserify'
+#vinylify = require "vinylify"
+source=require 'vinyl-source-stream'
+buffer=require 'vinyl-buffer'
+deamdify = require 'deamdify'
+coffeeify = require 'coffeeify'
+bpr= require 'browser-pack-register'
+coffee = require 'gulp-coffee'
+wrapCommonJS = require "gulp-wrap-commonjs"
+requireJSSource =  fs.readFileSync "./site-loader/node_modules/commonjs-require-definition/require.js"
 
 through = require('through2')
 tildify = require('tildify')
@@ -30,6 +41,36 @@ chalk = require('chalk')
 objectAssign = require('object-assign')
 plur = require('plur')
 prop = chalk.blue
+
+DBModel = Backbone.Model.exteend 
+  default:
+    draft: true
+DBColl = Backbone.Collection.extend 
+  model: DBModel
+allDB = new DBColl()
+
+examineBundle = (opts) ->
+  opts = objectAssign({
+    title: 'gulp-browserify-debug:'
+    minimal: true
+  }, opts)
+  if process.argv.indexOf('--verbose') != -1
+    opts.verbose = true
+    opts.minimal = false
+  count = 0
+  through.obj ((file, enc, cb) ->
+    full = '\n' + (if file.cwd then 'cwd:   ' + prop(tildify(file.cwd)) else '') + (if file.base then '\nbase:  ' + prop(tildify(file.base)) else '') + (if file.path then '\npath:  ' + prop(tildify(file.path)) else '') + (if file.stat and opts.verbose then '\nstat:  ' + prop(stringifyObject(file.stat, indent: '       ').replace(/[{}]/g, '').trim()) else '') + '\n'
+    output = if opts.minimal then prop(path.relative(process.cwd(), file.path)) else full
+    debugger
+    count++
+    console.log opts.title + ' ' + output
+    console.log file.contents.toString()
+    cb null, file
+    return
+  ), (cb) ->
+    console.log opts.title + ' ' + chalk.green(count + ' ' + plur('item', count))
+    cb()
+    return
 
 examine = (opts) ->
   opts = objectAssign({
@@ -46,8 +87,10 @@ examine = (opts) ->
     count++
     console.log opts.title + ' ' + output
     try
-      data =eval file.contents.toString()
+      {html,db} = eval file.contents.html.toString()
       file.extname ='.html'
+      data = html
+      allDB.push db
     catch err
       nc = err.toString()
       data = nc |  "-------\n" | file.contents
@@ -64,49 +107,152 @@ for aSite in Sites.results
   S[aSite.name] = aSite.fields
 Sites = S
 
+toVinyl = (b) ->
+  if !(b instanceof browserify)
+    b = browserify.apply(null, arguments)
+  bundle = b.bundle
 
+  b.bundle = (name) ->
+    if typeof name =='string'
+      return bundle.call(b).on('error', (err) ->
+        console.log "ERR in Module $name",err
+        return
+        ).pipe(source(name)).pipe buffer()
+
+  b
+
+bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 'utf-8')
+bpipeline = (fileIn,fileOut)->
+  a=browserify fileIn,
+      transform: ['coffeeify','deamdify']
+      extensions: ['.coffee']
+      debug:true
+      paths:['./node_modules',"./sites/#{site}/"]
+      prelude: "JAH bcp here"
+  return a
+#
 #console.log S
 for site in ['stjohnsjim']
-  exports[site + 'Html'] = do (site)->
+  exports[site + 'Html'] = do (site)-> return ()->
     siteTemplate = fs.readFileSync "./sites/#{site}/templates/#{site}template.coffee"
     HalvallaCard = fs.readFileSync "./sites/#{site}/templates/card.coffee"
     console.log "Generating #{site}"
     gulp.src("./sites/#{site}/templates/**/*.coffee")
       .pipe gulpInsert.prepend HalvallaCard
       .pipe gulpInsert.prepend siteTemplate
-      .pipe gulpInsert.append "\n\nreturn 'no' unless renderer? \nconsole.log 'hello'\nreturn (T.render (new renderer db).html)"
+      .pipe gulpInsert.append "\n\nreturn {db:false,html:''}  unless renderer? \nconsole.log 'hello'\nreturn {db: db, html:(T.render (new renderer db).html)}"
       .pipe coffee()
       .pipe examine()
       .pipe gulp.dest("newfiles/")
     return
-  exports[site + 'Js'] = do (site)->
-    gulp.src("./site-loader/app/initialize.coffee", read:false )
-      .pipe browserify transform: ['coffeeify'], extensions: ['.coffee'], paths:['./node_modules',"./sites/#{site}/"]
-      .pipe rename "assets/js/app.js"
+  exports[site + 'Js'] = do (site)-> return ()->
+    bb= browserify "./site-loader/app/initialize.coffee",
+      transform: ['coffeeify','deamdify']
+      extensions: ['.coffee']
+      fullPaths: true
+      paths:['./site-loader/node_modules','./site-loader/app',"./sites/#{site}","./sites/#{site}/payload-","./sites/#{site}/node_modules"]
+      basedir: "/Users/jahbini/mar1on/site-master"
+      prelude: "JAH bcp here"
+      read:false
+    xx= bb.pipeline.get 'pack'
+    yy= xx.pop()
+    xx.push bpr raw:true, prelude: requireJSSource.toString()
+    #xx.push bpr raw:true
+    b1= toVinyl bb
+    b2= b1.bundle("assets/js/app.js")
+      .pipe examineBundle verbose:true,minimal:false
       .pipe gulp.dest("newfiles/")
-    gulp.src("./site-loader/node_modules/jquery/dist/jquery.js").pipe(rename "assets/js/vendor.js").pipe gulp.dest "newfiles/"
+    gulp.src([
+        "./site-loader/node_modules/jquery/dist/jquery.js"
+        "./site-loader/node_modules/asap/asap.js"
+      ])
+     .pipe gulpAddSource.append './site-loader/node_modules/bootstrap/dist/js/bootstrap.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/backbone/backbone.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/base64-js/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/buffer/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/chroma-js/chroma.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/font-face-observer/src/dom.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/font-face-observer/src/observer.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/font-face-observer/src/ruler.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/halvalla/lib/halvalla-mithril.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/halvalla/lib/html-tags.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/halvalla/lib/name-mine.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/halvalla/lib/halvalla.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/halvalla/lib/teacup.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/ieee754/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/isarray/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/mithril/mithril.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/mss-js/mss.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/palx/dist/hue-name.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/palx/dist/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/process/browser.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/promise/index.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/node-extensions.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/es6-extensions.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/done.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/core.js'
+     .pipe gulpAddSource.append './site-loader/node_modules/underscore/underscore.js'
+     .pipe wrapCommonJS relativePath:"./site-loader/node_modules/"
+     #.pipe examineBundle verbose:true,minimal:false
+     #.pipe gulpAddSource.append './site-loader/node_modules/font-face-observer/src/*.js'
+     .pipe(concat "assets/js/vendor.js")
+     .pipe gulpInsert.prepend requireJSSource + ";"
+     .pipe gulpInsert.append """
+require.alias('./site-loader/node_modules/backbone/backbone.js','backbone');
+require.alias('./site-loader/node_modules/base64-js/index.js','base64-js');
+require.alias('./site-loader/node_modules/bootstrap/dist/js/bootstrap.js','bootstrap');
+require.alias('./site-loader/node_modules/chroma-js/chroma.js','chroma-js');
+require.alias('./site-loader/node_modules/font-face-observer/src/dom.js','dom');
+require.alias('./site-loader/node_modules/font-face-observer/src/observer.js','observer');
+require.alias('./site-loader/node_modules/font-face-observer/src/ruler.js','ruler');
+require.alias('./site-loader/node_modules/halvalla/lib/halvalla-mithril.js','halvalla-mithril');
+require.alias('./site-loader/node_modules/halvalla/lib/halvalla.js','halvalla');
+require.alias('./site-loader/node_modules/halvalla/lib/teacup.js','teacup');
+require.alias('./site-loader/node_modules/halvalla/lib/html-tags.js','html-tags');
+require.alias('./site-loader/node_modules/halvalla/lib/name-mine.js','name-mine');
+require.alias('./site-loader/node_modules/ieee754/index.js','ieee754');
+require.alias('./site-loader/node_modules/isarray/index.js','isarray');
+require.alias('./site-loader/node_modules/mithril/mithril.js','mithril');
+require.alias('./site-loader/node_modules/mss-js/mss.js','mss-js');
+require.alias('./site-loader/node_modules/palx/dist/hue-name.js','hue-name.js');
+require.alias('./site-loader/node_modules/palx/dist/index.js','palx');
+require.alias('./site-loader/node_modules/process/browser.js','process');
+require.alias('./site-loader/node_modules/promise/index.js','promise');
+require.alias('./site-loader/node_modules/underscore/underscore.js','underscore');
+require.alias('./site-loader/node_modules/promise/index.js','promise');
+require.alias('./site-loader/node_modules/buffer/index.js','buffer');
+require.alias('jquery/dist/jquery.js','jquery');
+require.alias('asap/asap.js','asap');
+require.alias('asap/me.js','you');
+require("jquery");
+     """
+     .pipe gulp.dest "newfiles/"
     return
-  exports[site + 'Assets'] = do (site) ->
+  exports[site + 'Assets'] = do (site) -> return ()->
     gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
       .pipe gulp.dest "newfiles/"
     return
-  exports[site + 'Vender'] = do (site) ->
-    gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
+  exports[site + 'Css'] = do (site) -> return ()->
+    gulp.src([
+        "./site-loader/node_modules/blaze/scss/dist/blaze.min.css",
+        "./site-loader/node_modules/ace-css/css/ace.min.css",
+        "./site-loader/node_modules/basscss-grid/css/grid.css",
+        "./site-loader/node_modules/bootstrap/dist/css/bootstrap.css",
+        "./sites/#{site}/templates/**/*.css" ])
+      .pipe(concat "assets/css/vendor.css")
+      .pipe gulp.dest "newfiles/"
+    gulp.src(["./sites/#{site}/payload-/css/*.css","./site-loader/app/css/*.css" ])
+      .pipe(concat "assets/css/app.css")
       .pipe gulp.dest "newfiles/"
     return
-  exports[site + 'Css'] = do (site) ->
-    gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
-      .pipe gulp.dest "newfiles/"
-    return
-  exports[site] = do (site)->
+  exports[site] = do (site)-> return ()->
     exports[site + "Js"]()
     exports[site + "Html"]()
-    exports[site + "Vender"]()
     exports[site + "Css"]()
     return
-  return
 
-exports.default = exports.stjohnsjimVender
+exports.default = exports.stjohnsjimJs
+console.log exports
 
 return
 process.exit 0

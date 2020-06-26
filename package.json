@@ -24,13 +24,18 @@
   },
   "homepage": "https://github.com/jahbini/site-master#readme",
   "dependencies": {
+    "browser-pack-register": "https://github.com/jahbini/browser-pack-register",
+    "browserify": "^16.5.1",
+    "browserify-common-prelude": "^0.5.4",
     "coffeeify": "^3.0.1",
     "coffeescript": "^2.5.1",
+    "deamdify": "^0.3.0",
     "del": "^5.1.0",
+    "factor-vinylify": "^3.0.4",
     "gulp": "^4.0.2",
+    "gulp-add-src": "^1.0.0",
     "gulp-autoprefixer": "^7.0.1",
     "gulp-beautify": "^3.0.0",
-    "gulp-browserify": "^0.5.1",
     "gulp-coffee": "^3.0.3",
     "gulp-concat": "^2.6.1",
     "gulp-debug": "^4.0.0",
@@ -40,6 +45,12 @@
     "gulp-rename": "^2.0.0",
     "gulp-sass": "^4.1.0",
     "lodash": "^4.17.15",
-    "merge-stream": "^2.0.0"
+    "merge-stream": "^2.0.0",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0",
+    "vinylify": "^0.0.2"
+  },
+  "devDependencies": {
+    "gulp-wrap-commonjs": "^0.1.14"
   }
 }
