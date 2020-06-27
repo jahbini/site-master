@@ -42,10 +42,10 @@ objectAssign = require('object-assign')
 plur = require('plur')
 prop = chalk.blue
 
-DBModel = Backbone.Model.exteend 
+DBModel = Backbone.Model.extend
   default:
     draft: true
-DBColl = Backbone.Collection.extend 
+DBColl = Backbone.Collection.extend
   model: DBModel
 allDB = new DBColl()
 
@@ -86,15 +86,19 @@ examine = (opts) ->
     output = if opts.minimal then prop(path.relative(process.cwd(), file.path)) else full
     count++
     console.log opts.title + ' ' + output
+    debugger
     try
-      {html,db} = eval file.contents.html.toString()
+      raw = file.contents.toString()
       file.extname ='.html'
-      data = html
-      allDB.push db
+      data = eval raw
+      data = JSON.parse data
+      db=data.db
+      html= data.html || ""
+      #allDB.push db
     catch err
       nc = err.toString()
-      data = nc |  "-------\n" | file.contents
-    file.contents = Buffer.from data
+      data = nc |  "-------\n" | file.contents.toString()
+    file.contents = Buffer(html)
     cb null, file
     return
   ), (cb) ->
@@ -140,7 +144,14 @@ for site in ['stjohnsjim']
     gulp.src("./sites/#{site}/templates/**/*.coffee")
       .pipe gulpInsert.prepend HalvallaCard
       .pipe gulpInsert.prepend siteTemplate
-      .pipe gulpInsert.append "\n\nreturn {db:false,html:''}  unless renderer? \nconsole.log 'hello'\nreturn {db: db, html:(T.render (new renderer db).html)}"
+      .pipe gulpInsert.append """
+        debugger
+        unless renderer?
+          return JSON.stringify {db:false,html:''}
+        t= (T.render (new renderer db).html)
+        value= { db: db, html:t }
+        return JSON.stringify(value)
+        """
       .pipe coffee()
       .pipe examine()
       .pipe gulp.dest("newfiles/")
@@ -154,6 +165,7 @@ for site in ['stjohnsjim']
       basedir: "/Users/jahbini/mar1on/site-master"
       prelude: "JAH bcp here"
       read:false
+    bb.require './site-loader/app/initialize.coffee'
     xx= bb.pipeline.get 'pack'
     yy= xx.pop()
     xx.push bpr raw:true, prelude: requireJSSource.toString()
@@ -251,7 +263,7 @@ require("jquery");
     exports[site + "Css"]()
     return
 
-exports.default = exports.stjohnsjimJs
+exports.default = exports.stjohnsjim
 console.log exports
 
 return

@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/jahbini/site-master#readme",
   "dependencies": {
+    "backbone": "^1.4.0",
     "browser-pack-register": "https://github.com/jahbini/browser-pack-register",
     "browserify": "^16.5.1",
     "browserify-common-prelude": "^0.5.4",
