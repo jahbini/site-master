@@ -19,7 +19,7 @@ gulpInsert = require 'gulp-insert'
 concat = require 'gulp-concat'
 debug = require 'gulp-debug'
 rename = require 'gulp-rename'
-
+sequencer = require 'gulp-sequence'
 os = require('os')
 pkg = require('./package.json')
 # browserify stuff
@@ -49,6 +49,16 @@ DBColl = Backbone.Collection.extend
   model: DBModel
 allDB = new DBColl()
 
+dumpDB= ()->
+  console.log allDB.toJSON()
+pfs = (stream) ->
+    new Promise((resolve, reject) ->
+      stream.on 'finish', resolve
+      stream.on 'end', resolve
+      # unsure if should use finish or end
+      stream.on 'error', reject
+      return
+      )
 examineBundle = (opts) ->
   opts = objectAssign({
     title: 'gulp-browserify-debug:'
@@ -61,14 +71,14 @@ examineBundle = (opts) ->
   through.obj ((file, enc, cb) ->
     full = '\n' + (if file.cwd then 'cwd:   ' + prop(tildify(file.cwd)) else '') + (if file.base then '\nbase:  ' + prop(tildify(file.base)) else '') + (if file.path then '\npath:  ' + prop(tildify(file.path)) else '') + (if file.stat and opts.verbose then '\nstat:  ' + prop(stringifyObject(file.stat, indent: '       ').replace(/[{}]/g, '').trim()) else '') + '\n'
     output = if opts.minimal then prop(path.relative(process.cwd(), file.path)) else full
-    debugger
     count++
-    console.log opts.title + ' ' + output
-    console.log file.contents.toString()
+    #console.log opts.title + ' ' + output
+    #console.log file.contents.toString()
     cb null, file
     return
   ), (cb) ->
     console.log opts.title + ' ' + chalk.green(count + ' ' + plur('item', count))
+    dumpDB()
     cb()
     return
 
@@ -85,7 +95,7 @@ examine = (opts) ->
     full = '\n' + (if file.cwd then 'cwd:   ' + prop(tildify(file.cwd)) else '') + (if file.base then '\nbase:  ' + prop(tildify(file.base)) else '') + (if file.path then '\npath:  ' + prop(tildify(file.path)) else '') + (if file.stat and opts.verbose then '\nstat:  ' + prop(stringifyObject(file.stat, indent: '       ').replace(/[{}]/g, '').trim()) else '') + '\n'
     output = if opts.minimal then prop(path.relative(process.cwd(), file.path)) else full
     count++
-    console.log opts.title + ' ' + output
+    #console.log opts.title + ' ' + output
     debugger
     try
       raw = file.contents.toString()
@@ -93,6 +103,8 @@ examine = (opts) ->
       data = eval raw
       data = JSON.parse data
       db=data.db
+      for key,val of db
+        allDB.push val unless key.match /^\d+$/
       html= data.html || ""
       #allDB.push db
     catch err
@@ -126,37 +138,56 @@ toVinyl = (b) ->
   b
 
 bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 'utf-8')
-bpipeline = (fileIn,fileOut)->
-  a=browserify fileIn,
-      transform: ['coffeeify','deamdify']
-      extensions: ['.coffee']
-      debug:true
-      paths:['./node_modules',"./sites/#{site}/"]
-      prelude: "JAH bcp here"
-  return a
 #
+
 #console.log S
 for site in ['stjohnsjim']
-  exports[site + 'Html'] = do (site)-> return ()->
+  exports[site + 'Html'] = do (site)-> return (cb)->
+    console.log "in HTML"
     siteTemplate = fs.readFileSync "./sites/#{site}/templates/#{site}template.coffee"
     HalvallaCard = fs.readFileSync "./sites/#{site}/templates/card.coffee"
     console.log "Generating #{site}"
-    gulp.src("./sites/#{site}/templates/**/*.coffee")
-      .pipe gulpInsert.prepend HalvallaCard
-      .pipe gulpInsert.prepend siteTemplate
-      .pipe gulpInsert.append """
-        debugger
-        unless renderer?
-          return JSON.stringify {db:false,html:''}
-        t= (T.render (new renderer db).html)
-        value= { db: db, html:t }
-        return JSON.stringify(value)
-        """
-      .pipe coffee()
-      .pipe examine()
-      .pipe gulp.dest("newfiles/")
-    return
-  exports[site + 'Js'] = do (site)-> return ()->
+    a=pfs(
+      gulp.src("./sites/#{site}/templates/**/*.coffee")
+        .pipe gulpInsert.prepend HalvallaCard
+        .pipe gulpInsert.prepend siteTemplate
+        .pipe gulpInsert.append """
+          debugger
+          unless renderer?
+            return JSON.stringify {db:false,html:''}
+          t= (T.render (new renderer db).html)
+          value= { db: db, html:t }
+          return JSON.stringify(value)
+          """
+        .pipe coffee()
+        .pipe examine()
+        .pipe gulp.dest("newfiles/")
+    )
+    b=()->
+      console.log "starting Mystories"
+      myStories = allDB.filter site: site
+      allStories = allDB
+      
+      return pfs(gulp.src('./mystories.json', allowEmpty:true)
+        .pipe gulpInsert.append "myStories=#{JSON.stringify myStories}"
+        .pipe rename 'mystories.json'
+        .pipe gulp.dest "newfiles/"
+        )
+    c=()->
+      console.log "starting allstories"
+      allStories = allDB
+      
+      return pfs(gulp.src('./allstories.json', allowEmpty:true)
+        .pipe gulpInsert.append "allStories=#{JSON.stringify allStories.toJSON()}"
+        .pipe rename 'allstories.json'
+        .pipe gulp.dest "newfiles/"
+        )
+    a.then( b).then(c).then ()->
+     console.log "DONE HTML and stories"
+     cb() if cb
+
+  exports[site + 'AppJs'] = do (site)-> return (cb)->
+    console.log "in JS"
     bb= browserify "./site-loader/app/initialize.coffee",
       transform: ['coffeeify','deamdify']
       extensions: ['.coffee']
@@ -168,12 +199,16 @@ for site in ['stjohnsjim']
     bb.require './site-loader/app/initialize.coffee'
     xx= bb.pipeline.get 'pack'
     yy= xx.pop()
-    xx.push bpr raw:true, prelude: requireJSSource.toString()
-    #xx.push bpr raw:true
+    #xx.push bpr raw:true, prelude: requireJSSource.toString()
+    xx.push bpr raw:true
     b1= toVinyl bb
     b2= b1.bundle("assets/js/app.js")
-      .pipe examineBundle verbose:true,minimal:false
+      #.pipe wrapCommonJS relativePath:"./site-loader/node_modules/"
+      #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
+      #.pipe examineBundle verbose:true,minimal:false
       .pipe gulp.dest("newfiles/")
+      
+  exports[site + 'VendorJs'] = do (site)-> return (cb)->
     gulp.src([
         "./site-loader/node_modules/jquery/dist/jquery.js"
         "./site-loader/node_modules/asap/asap.js"
@@ -239,13 +274,21 @@ require.alias('asap/me.js','you');
 require("jquery");
      """
      .pipe gulp.dest "newfiles/"
-    return
-  exports[site + 'Assets'] = do (site) -> return ()->
-    gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
-      .pipe gulp.dest "newfiles/"
-    return
-  exports[site + 'Css'] = do (site) -> return ()->
-    gulp.src([
+
+  exports[site + 'Assets'] = do (site) -> return (cb)->
+    console.log site, "performing Assets"
+    debugger
+    a=pfs(
+      gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
+        .pipe gulp.dest "newfiles/"
+    )
+    a.then ()->
+     console.log "DONE Assets"
+     cb() if cb
+
+  exports[site + 'Css'] = do (site) -> return (cb)->
+    console.log site, "performing CSS"
+    a=gulp.src([
         "./site-loader/node_modules/blaze/scss/dist/blaze.min.css",
         "./site-loader/node_modules/ace-css/css/ace.min.css",
         "./site-loader/node_modules/basscss-grid/css/grid.css",
@@ -253,132 +296,27 @@ require("jquery");
         "./sites/#{site}/templates/**/*.css" ])
       .pipe(concat "assets/css/vendor.css")
       .pipe gulp.dest "newfiles/"
-    gulp.src(["./sites/#{site}/payload-/css/*.css","./site-loader/app/css/*.css" ])
-      .pipe(concat "assets/css/app.css")
-      .pipe gulp.dest "newfiles/"
-    return
-  exports[site] = do (site)-> return ()->
-    exports[site + "Js"]()
+
+    b=()->
+      console.log "starting B"
+      return pfs(gulp.src(["./sites/#{site}/payload-/css/*.css","./site-loader/app/css/*.css" ])
+        .pipe concat "assets/css/app.css"
+        .pipe gulp.dest "newfiles/"
+        )
+    pfs(a).then( b).then ()->
+      console.log("DONECSS")
+      cb() if cb
+    
+  exports[site] = do (site)-> return (cb)=>
+    console.log "Activating Series",site
+    debugger
+    exports[site + "VendorJs"]()
+    exports[site + "AppJs"]()
     exports[site + "Html"]()
     exports[site + "Css"]()
-    return
+    exports[site + "Assets"]()
 
 exports.default = exports.stjohnsjim
 console.log exports
 
 return
-process.exit 0
-
-siteName = process.env.SITE
-if !siteName
-  console.log "Must specify env on cmd line: SITE='' brunch ..."
-  process.exit()
-else
-  console.log "Processing #{siteName} with brunch"
-theSite =  Sites[siteName]
-if !theSite
-  console.log "invalid site #{siteName} -- Not in sites.coffee"
-  process.exit()
-theResult =
-  # See http://brunch.io/#documentation for docs.
-  paths:
-    public: "domains/#{siteName}/public"
-    watched:[
-      "domains/#{siteName}/brunch-payload-"
-      'vendor'
-      'app'
-      ]
-  conventions:
-    ignored: (path) -> /\.c9|\.git/.test path
-    assets: /(css.fonts|assets)[\\/]/
-  modules:
-    autoRequire: css: [
-      siteName
-      "#{siteName}/brunch-payload-/#{siteName}"
-      "payload-/#{siteName}"
-    ],
-    "css/vendor.css": [
-      "normalize"
-      "blaze"
-      "ace-css"
-      "basscss-grid"
-      "bootstrap"
-    ]
-    nameCleaner: (path) =>
-      c=path.replace /^app\//, ''
-      c=c.replace ///^assets/#{siteName}///, ''
-      c=c.replace ///^domains\////, ''
-      c=c.replace ///#{siteName}[\/]brunch-payload-///,'payload-'
-      console.log "path Cleaner: #{path} - #{c}" if path.match "nothing to see here"
-      return c
-  files:
-    javascripts:
-      joinTo:
-        'assets/js/app.js': [/^app/,///domains/#{siteName}\/brunch-payload-/// ]
-        'assets/js/vendor.js': (f)->
-          pattern= ///vendor|bower_components|node_modules///
-          #console.log pattern
-          result = f.match pattern
-          #console.log "matching #{f}: #{result}"
-          return result
-
-
-      order:
-        after:  /helpers\//
-
-    stylesheets:
-      order:   # must use full names not anyMatch syntax
-        before: "node_modules/blaze/scss/dist/blaze.min.css"
-        after: [ "node_modules/ace-css/css/ace.css", "node_modules/basscss-grid/css/grid.css", "node_modules/bootstrap/dist/css/bootstrap.min.css"]
-      joinTo:
-        'assets/css/app.css': [/^app/,///domains\/#{siteName}\/brunch-payload-///]
-        'assets/css/vendor.css': ///^vendor|^bower_components|^node_modules///
-
-    templates:
-      joinTo:
-        'assets/js/app.js': /^app/
-  conventions:
-    vendor:
-      ///(^bower_components|node_modules|vendor)[\/]///
-  npm:
-    enabled: true
-    globals:
-      loglevel: "loglevel"
-      #mui: "mui"
-      #_: "underscore"
-      jQuery: "jquery"
-      fontFaceObserver: 'font-face-observer'
-
-    styles: {
-      "blaze": ["scss/dist/blaze.min.css"]
-      "bootstrap": ["dist/css/bootstrap.min.css"]
-      "ace-css": [ "css/ace.css" ]
-      "basscss-grid": [ "css/grid.css" ]
-    }
-
-  plugins:
-    order: [ 'coffeescript', 'babel' ]
-    uglify:
-      ignored: /app.js/
-    gzip:
-      optimize: "optimize"
-      paths:
-        javascript: 'assets/js'
-        stylesheet: 'assets/css'
-      removeOriginalFiles: false
-      renameGzipFilesToOriginalFiles: false
-      
-    babel:
-      presets: [ 'latest', 'react']
-      plugins:  [
-#        ["babel-plugin-root-import",  rootPathPrefix: "" ]
-#        ["minify-dead-code-elimination"]
-      ] 
-    scss:
-      mode: 'ruby' # set to 'native' to force libsass
-  server:
-    noPushState: true
-    stripSlashes: true
-
-#console.log theResult
-exports.config = theResult
