@@ -30,6 +30,7 @@
     "browserify-common-prelude": "^0.5.4",
     "coffeeify": "^3.0.1",
     "coffeescript": "^2.5.1",
+    "cson": "^7.15.0",
     "deamdify": "^0.3.0",
     "del": "^5.1.0",
     "factor-vinylify": "^3.0.4",
@@ -48,6 +49,7 @@
     "gulp-sequence": "^1.0.0",
     "lodash": "^4.17.15",
     "merge-stream": "^2.0.0",
+    "moment": "^2.27.0",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
     "vinylify": "^0.0.2"

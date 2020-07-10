@@ -109,6 +109,7 @@ examine = (opts) ->
       #allDB.push db
     catch err
       nc = err.toString()
+      html= ""
       data = nc |  "-------\n" | file.contents.toString()
     file.contents = Buffer(html)
     cb null, file
@@ -141,7 +142,7 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
 #
 
 #console.log S
-for site in ['stjohnsjim']
+for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
   exports[site + 'Html'] = do (site)-> return (cb)->
     console.log "in HTML"
     siteTemplate = fs.readFileSync "./sites/#{site}/templates/#{site}template.coffee"
@@ -161,7 +162,7 @@ for site in ['stjohnsjim']
           """
         .pipe coffee()
         .pipe examine()
-        .pipe gulp.dest("newfiles/")
+        .pipe gulp.dest("sites/#{site}/public/")
     )
     b=()->
       console.log "starting Mystories"
@@ -171,7 +172,7 @@ for site in ['stjohnsjim']
       return pfs(gulp.src('./mystories.json', allowEmpty:true)
         .pipe gulpInsert.append "myStories=#{JSON.stringify myStories}"
         .pipe rename 'mystories.json'
-        .pipe gulp.dest "newfiles/"
+        .pipe gulp.dest "sites/#{site}/public/"
         )
     c=()->
       console.log "starting allstories"
@@ -180,7 +181,7 @@ for site in ['stjohnsjim']
       return pfs(gulp.src('./allstories.json', allowEmpty:true)
         .pipe gulpInsert.append "allStories=#{JSON.stringify allStories.toJSON()}"
         .pipe rename 'allstories.json'
-        .pipe gulp.dest "newfiles/"
+        .pipe gulp.dest "sites/#{site}/public/"
         )
     a.then( b).then(c).then ()->
      console.log "DONE HTML and stories"
@@ -188,15 +189,15 @@ for site in ['stjohnsjim']
 
   exports[site + 'AppJs'] = do (site)-> return (cb)->
     console.log "in JS"
-    bb= browserify "./site-loader/app/initialize.coffee",
+    bb= browserify "./app/initialize.coffee",
       transform: ['coffeeify','deamdify']
       extensions: ['.coffee']
       fullPaths: true
-      paths:['./site-loader/node_modules','./site-loader/app',"./sites/#{site}","./sites/#{site}/payload-","./sites/#{site}/node_modules"]
+      paths:['./site-loader/node_modules','./app',"./sites/#{site}","./sites/#{site}/payload-","./sites/#{site}/node_modules"]
       basedir: "/Users/jahbini/mar1on/site-master"
       prelude: "JAH bcp here"
       read:false
-    bb.require './site-loader/app/initialize.coffee'
+    bb.require './app/initialize.coffee'
     xx= bb.pipeline.get 'pack'
     yy= xx.pop()
     #xx.push bpr raw:true, prelude: requireJSSource.toString()
@@ -205,14 +206,15 @@ for site in ['stjohnsjim']
     b2= b1.bundle("assets/js/app.js")
       #.pipe wrapCommonJS relativePath:"./site-loader/node_modules/"
       #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
-      #.pipe examineBundle verbose:true,minimal:false
-      .pipe gulp.dest("newfiles/")
+      .pipe examineBundle verbose:true,minimal:false
+      .pipe gulp.dest("sites/#{site}/public/")
       
   exports[site + 'VendorJs'] = do (site)-> return (cb)->
     gulp.src([
         "./site-loader/node_modules/jquery/dist/jquery.js"
         "./site-loader/node_modules/asap/asap.js"
       ])
+      ###
      .pipe gulpAddSource.append './site-loader/node_modules/bootstrap/dist/js/bootstrap.js'
      .pipe gulpAddSource.append './site-loader/node_modules/backbone/backbone.js'
      .pipe gulpAddSource.append './site-loader/node_modules/base64-js/index.js'
@@ -239,6 +241,7 @@ for site in ['stjohnsjim']
      .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/done.js'
      .pipe gulpAddSource.append './site-loader/node_modules/promise/lib/core.js'
      .pipe gulpAddSource.append './site-loader/node_modules/underscore/underscore.js'
+     ###
      .pipe wrapCommonJS relativePath:"./site-loader/node_modules/"
      #.pipe examineBundle verbose:true,minimal:false
      #.pipe gulpAddSource.append './site-loader/node_modules/font-face-observer/src/*.js'
@@ -273,14 +276,14 @@ require.alias('asap/asap.js','asap');
 require.alias('asap/me.js','you');
 require("jquery");
      """
-     .pipe gulp.dest "newfiles/"
+     .pipe gulp.dest "sites/#{site}/public/"
 
   exports[site + 'Assets'] = do (site) -> return (cb)->
     console.log site, "performing Assets"
     debugger
     a=pfs(
       gulp.src(["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ])
-        .pipe gulp.dest "newfiles/"
+        .pipe gulp.dest "sites/#{site}/public/"
     )
     a.then ()->
      console.log "DONE Assets"
@@ -295,13 +298,13 @@ require("jquery");
         "./site-loader/node_modules/bootstrap/dist/css/bootstrap.css",
         "./sites/#{site}/templates/**/*.css" ])
       .pipe(concat "assets/css/vendor.css")
-      .pipe gulp.dest "newfiles/"
+      .pipe gulp.dest "sites/#{site}/public/"
 
     b=()->
       console.log "starting B"
-      return pfs(gulp.src(["./sites/#{site}/payload-/css/*.css","./site-loader/app/css/*.css" ])
+      return pfs(gulp.src([ "./site-loader/app/css/*.css" , "./sites/#{site}/payload-/*.css" ])
         .pipe concat "assets/css/app.css"
-        .pipe gulp.dest "newfiles/"
+        .pipe gulp.dest "sites/#{site}/public/"
         )
     pfs(a).then( b).then ()->
       console.log("DONECSS")
@@ -316,7 +319,7 @@ require("jquery");
     exports[site + "Css"]()
     exports[site + "Assets"]()
 
-exports.default = exports.stjohnsjim
+exports.default = exports.celarien
 console.log exports
 
 return
