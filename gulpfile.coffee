@@ -1,3 +1,4 @@
+# #
 # Brunch-config.coffee meta file
 #
 Backbone = require 'backbone'
