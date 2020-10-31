@@ -5,7 +5,6 @@ Backbone = require 'backbone'
 _=require 'lodash'
 path = require 'path'
 fs = require 'fs'
-Sites = require './sitedef.json'
 autoprefixer = require('gulp-autoprefixer')
 beautify = require('gulp-beautify')
 #browserSync = require('browser-sync').create()
@@ -120,11 +119,6 @@ examine = (opts) ->
     cb()
     return
 
-S={}
-for aSite in Sites.results
-  aSite.fields.siteId = aSite.id
-  S[aSite.name] = aSite.fields
-Sites = S
 
 toVinyl = (b) ->
   if !(b instanceof browserify)
@@ -144,14 +138,13 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
 #
 
 #console.log S
-for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
-  exports[site + 'Html'] = do (site)-> return (cb)->
+  exports['Html'] = (cb)->
     console.log "in HTML"
-    siteTemplate = fs.readFileSync "./sites/#{site}/templates/#{site}template.coffee"
-    HalvallaCard = fs.readFileSync "./sites/#{site}/templates/card.coffee"
+    siteTemplate = fs.readFileSync "./site/templates/#{site}template.coffee"
+    HalvallaCard = fs.readFileSync "./site/templates/card.coffee"
     console.log "Generating #{site}"
     a=pfs(
-      gulp.src("./sites/#{site}/templates/**/*.coffee")
+      gulp.src("./site/templates/**/*.coffee")
         .pipe gulpInsert.prepend HalvallaCard
         .pipe gulpInsert.prepend siteTemplate
         .pipe gulpInsert.append """
@@ -164,7 +157,7 @@ for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
           """
         .pipe coffee()
         .pipe examine()
-        .pipe gulp.dest("sites/#{site}/public/")
+        .pipe gulp.dest("site/public/")
     )
     b=()->
       console.log "starting Mystories"
@@ -174,7 +167,7 @@ for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
       return pfs(gulp.src('./mystories.json', allowEmpty:true)
         .pipe gulpInsert.append "myStories=#{JSON.stringify myStories}"
         .pipe rename 'mystories.json'
-        .pipe gulp.dest "sites/#{site}/public/"
+        .pipe gulp.dest "site/public/"
         )
     c=()->
       console.log "starting allstories"
@@ -183,20 +176,20 @@ for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
       return pfs(gulp.src('./allstories.json', allowEmpty:true)
         .pipe gulpInsert.append "allStories=#{JSON.stringify allStories.toJSON()}"
         .pipe rename 'allstories.json'
-        .pipe gulp.dest "sites/#{site}/public/"
+        .pipe gulp.dest "site/public/"
         )
     a.then( b).then(c).then ()->
      console.log "DONE HTML and stories"
      cb() if cb
 
-  exports[site + 'AppJs'] = do (site)-> return (cb)->
+  exports['AppJs'] = (cb)->
     console.log "in JS"
     bb= browserify "./app/initialize.coffee",
       transform: ['coffeeify','deamdify']
       extensions: ['.coffee']
       fullPaths: true
-      paths:['./node_modules','./app',"./sites/#{site}","./sites/#{site}/payload-","./sites/#{site}/node_modules"]
-      basedir: "/Users/jahbini/mar1on/site-master"
+      paths:['./node_modules','./app',"./site","./site/payload-","./site/node_modules"]
+      basedir: "/site-master"
       prelude: "JAH bcp here"
       read:false
     bb.require './app/initialize.coffee'
@@ -209,9 +202,9 @@ for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
       #.pipe wrapCommonJS relativePath:"./node_modules/"
       #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
       .pipe examineBundle verbose:true,minimal:false
-      .pipe gulp.dest("sites/#{site}/public/")
+      .pipe gulp.dest("site/public/")
       
-  exports[site + 'VendorJs'] = do (site)-> return (cb)->
+  exports['VendorJs'] =  (cb)->
     gulp.src([
         "./node_modules/jquery/dist/jquery.js"
         "./node_modules/asap/asap.js"
@@ -250,22 +243,22 @@ for site in ['stjohnsjim',"celarien","bamboosnow","lowroller","nia-happenings"]
 require.alias('jquery/dist/jquery.js','jquery');
 require("jquery");
      """
-     .pipe gulp.dest "sites/#{site}/public/"
+     .pipe gulp.dest "./site/public/"
 
-  exports[site + 'Assets'] = do (site) -> return (cb)->
+  exports['Assets'] = (cb)->
     console.log site, "performing Assets"
-    sources=["./sites/#{site}/payload-/assets/**/*", "./sites/#{site}/templates/**/*.jpg", "./sites/#{site}/templates/**/*.png" ]
+    sources=["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ]
     a=pfs(
       gulp.src sources
         .pipe examineBundle title: "ASSET bundle", minimal:false
-        .pipe gulp.dest "sites/#{site}/public/"
+        .pipe gulp.dest "site/public/"
     )
     a.then ()->
      console.log "DONE Assets"
      cb() if cb
 
-    if site == "nia-happenings"
-      sources = "./sites/nia-web/dist/assets/**/*"
+    if site == "nia-web"
+      sources = "./site/dist/assets/**/*"
       a=pfs(
         gulp.src sources
           .pipe examineBundle title: "nia-web ASSET bundle", minimal:false
@@ -276,7 +269,7 @@ require("jquery");
        cb() if cb
 
 
-  exports[site + 'Css'] = do (site) -> return (cb)->
+  exports['Css'] = do (site) -> return (cb)->
     console.log site, "performing CSS"
     a=gulp.src([
         "./node_modules/blaze/scss/dist/blaze.min.css",
@@ -289,23 +282,22 @@ require("jquery");
 
     b=()->
       console.log "starting B"
-      return pfs(gulp.src([ "./app/css/*.css" , "./sites/#{site}/payload-/*.css" ])
+      return pfs(gulp.src([ "./app/css/*.css" , "./site/payload-/*.css" ])
         .pipe concat "assets/css/app.css"
-        .pipe gulp.dest "sites/#{site}/public/"
+        .pipe gulp.dest "site/public/"
         )
     pfs(a).then( b).then ()->
       console.log("DONECSS")
       cb() if cb
     
-  exports[site] = do (site)-> return (cb)=>
+  exports[default] = (cb)=>
     console.log "Activating Series",site
-    exports[site + "VendorJs"]()
-    exports[site + "AppJs"]()
-    exports[site + "Html"]()
-    exports[site + "Css"]()
-    exports[site + "Assets"]()
+    exports["VendorJs"]()
+    exports["AppJs"]()
+    exports["Html"]()
+    exports["Css"]()
+    exports["Assets"]()
 
-exports.default = exports['nia-happenings']
 console.log exports
 
 return
