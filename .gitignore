@@ -1,7 +1,7 @@
 public-*
 sites-enabled-default
 .c9/*
-sites/*
+site/*
 newfiles/
 site-loader
 site-loader/*

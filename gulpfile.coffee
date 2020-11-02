@@ -7,7 +7,7 @@ path = require 'path'
 fs = require 'fs'
 autoprefixer = require('gulp-autoprefixer')
 beautify = require('gulp-beautify')
-#browserSync = require('browser-sync').create()
+browserSync = require('browser-sync').create()
 del = require('del')
 gulp = require('gulp')
 gulpAddSource = require 'gulp-add-src'
@@ -40,7 +40,14 @@ stringifyObject = require('stringify-object')
 objectAssign = require('object-assign')
 plur = require('plur')
 chalk = require('chalk')
+siteDef = require './site/site.coffee'
 prop = chalk.blue
+
+for key of siteDef
+  site = key
+
+  console.log "SITE!!:",site
+
 
 DBModel = Backbone.Model.extend
   default:
@@ -137,12 +144,11 @@ toVinyl = (b) ->
 bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 'utf-8')
 #
 
-#console.log S
-  exports['Html'] = (cb)->
+exports['Html'] = (cb)->
     console.log "in HTML"
-    siteTemplate = fs.readFileSync "./site/templates/#{site}template.coffee"
+    siteTemplate = fs.readFileSync "./site/templates/bamboosnowtemplate.coffee"
     HalvallaCard = fs.readFileSync "./site/templates/card.coffee"
-    console.log "Generating #{site}"
+    console.log "Generating site"
     a=pfs(
       gulp.src("./site/templates/**/*.coffee")
         .pipe gulpInsert.prepend HalvallaCard
@@ -157,7 +163,7 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
           """
         .pipe coffee()
         .pipe examine()
-        .pipe gulp.dest("site/public/")
+        .pipe gulp.dest("site/public/index.html")
     )
     b=()->
       console.log "starting Mystories"
@@ -182,14 +188,15 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
      console.log "DONE HTML and stories"
      cb() if cb
 
-  exports['AppJs'] = (cb)->
+exports['AppJs'] = (cb)->
     console.log "in JS"
+    debugger
     bb= browserify "./app/initialize.coffee",
-      transform: ['coffeeify','deamdify']
+      transform: [coffeeify,deamdify]
       extensions: ['.coffee']
       fullPaths: true
       paths:['./node_modules','./app',"./site","./site/payload-","./site/node_modules"]
-      basedir: "/site-master"
+      basedir: process.env.PWD
       prelude: "JAH bcp here"
       read:false
     bb.require './app/initialize.coffee'
@@ -204,7 +211,7 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
       .pipe examineBundle verbose:true,minimal:false
       .pipe gulp.dest("site/public/")
       
-  exports['VendorJs'] =  (cb)->
+exports['VendorJs'] =  (cb)->
     gulp.src([
         "./node_modules/jquery/dist/jquery.js"
         "./node_modules/asap/asap.js"
@@ -245,7 +252,7 @@ require("jquery");
      """
      .pipe gulp.dest "./site/public/"
 
-  exports['Assets'] = (cb)->
+exports['Assets'] = (cb)->
     console.log site, "performing Assets"
     sources=["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ]
     a=pfs(
@@ -262,23 +269,23 @@ require("jquery");
       a=pfs(
         gulp.src sources
           .pipe examineBundle title: "nia-web ASSET bundle", minimal:false
-          .pipe gulp.dest "sites/#{site}/public/assets"
+          .pipe gulp.dest "sites/public/assets"
       )
       a.then ()->
        console.log "DONE nia-web Assets"
        cb() if cb
 
 
-  exports['Css'] = do (site) -> return (cb)->
+exports['Css'] = do (site) -> return (cb)->
     console.log site, "performing CSS"
     a=gulp.src([
         "./node_modules/blaze/scss/dist/blaze.min.css",
         "./node_modules/ace-css/css/ace.min.css",
         "./node_modules/basscss-grid/css/grid.css",
         "./node_modules/bootstrap/dist/css/bootstrap.css",
-        "./sites/#{site}/templates/**/*.css" ])
+        "./site/templates/**/*.css" ])
       .pipe(concat "assets/css/vendor.css")
-      .pipe gulp.dest "sites/#{site}/public/"
+      .pipe gulp.dest "site/public/"
 
     b=()->
       console.log "starting B"
@@ -290,13 +297,36 @@ require("jquery");
       console.log("DONECSS")
       cb() if cb
     
-  exports[default] = (cb)=>
+exports.watch = (cb)->
+  gulp.watch './site/templates/**/*.css',exports.Css
+  gulp.watch ["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ] , exports.Assets
+  gulp.watch  "./site/templates/**/*.coffee", exports.AppJs
+  cb()
+
+exports.dist = (cb)=>
     console.log "Activating Series",site
     exports["VendorJs"]()
     exports["AppJs"]()
     exports["Html"]()
     exports["Css"]()
     exports["Assets"]()
+    cb()
+    
+exports.default = exports.start =  gulp.series  exports.dist, gulp.parallel initBrowserSync, exports.watch
+
+    // Init live server browser sync
+initBrowserSync(done)->
+  browserSync.init
+    server:  baseDir: site/public 
+    logLevel: "debug"
+    port: 3000
+    localOnly: false
+    open: 'external-ui'
+    host: uiHost
+    ui: {  host: uiHost, UI_HOST: uiHost, 'ui-host':uiHost }
+    'ui-external': uiHost
+    notify: true
+  done();
 
 console.log exports
 

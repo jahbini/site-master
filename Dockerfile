@@ -8,11 +8,12 @@ RUN yarn global add gulp-cli
 WORKDIR /site-master
 ADD . /site-master
 RUN node -v
-RUN yarn install || yarn audit
+RUN yarn install
+RUN rm -rf /site-master/site/*
 
 #RUN curl -LOu jahbini:Tqbfj0tlD https://github.com/jahbini/Stagserv/archive/mas
 RUN ls -lisa
 
 expose 3030
-CMD yarn run gitget; gulp bamboosnowAppJs  | sleep 5000
+CMD yarn run gitget; gulp  || sleep 5000
 
