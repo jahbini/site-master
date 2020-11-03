@@ -1,4 +1,4 @@
-# #
+#
 # Brunch-config.coffee meta file
 #
 Backbone = require 'backbone'
@@ -57,7 +57,8 @@ DBColl = Backbone.Collection.extend
 allDB = new DBColl()
 
 dumpDB= ()->
-  console.log allDB.toJSON()
+  #console.log allDB.toJSON()
+
 pfs = (stream) ->
     new Promise((resolve, reject) ->
       stream.on 'finish', resolve
@@ -144,7 +145,7 @@ toVinyl = (b) ->
 bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 'utf-8')
 #
 
-exports['Html'] = (cb)->
+exports.Html = (cb)->
     console.log "in HTML"
     siteTemplate = fs.readFileSync "./site/templates/bamboosnowtemplate.coffee"
     HalvallaCard = fs.readFileSync "./site/templates/card.coffee"
@@ -163,7 +164,7 @@ exports['Html'] = (cb)->
           """
         .pipe coffee()
         .pipe examine()
-        .pipe gulp.dest("site/public/index.html")
+        .pipe gulp.dest("site/public/")
     )
     b=()->
       console.log "starting Mystories"
@@ -208,7 +209,7 @@ exports['AppJs'] = (cb)->
     b2= b1.bundle("assets/js/app.js")
       #.pipe wrapCommonJS relativePath:"./node_modules/"
       #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
-      .pipe examineBundle verbose:true,minimal:false
+      .pipe examineBundle verbose:true,minimal:true
       .pipe gulp.dest("site/public/")
       
 exports['VendorJs'] =  (cb)->
@@ -243,7 +244,7 @@ exports['VendorJs'] =  (cb)->
      .pipe gulpAddSource.append './node_modules/promise/lib/core.js'
      .pipe gulpAddSource.append './node_modules/underscore/underscore.js'
      .pipe wrapCommonJS relativePath:"./node_modules/"
-     .pipe examineBundle verbose:true,minimal:false
+     .pipe examineBundle verbose:true,minimal:true
      .pipe(concat "assets/js/vendor.js")
      .pipe gulpInsert.prepend requireJSSource + ";"
      .pipe gulpInsert.append """
@@ -257,7 +258,7 @@ exports['Assets'] = (cb)->
     sources=["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ]
     a=pfs(
       gulp.src sources
-        .pipe examineBundle title: "ASSET bundle", minimal:false
+        .pipe examineBundle title: "ASSET bundle", minimal:true
         .pipe gulp.dest "site/public/"
     )
     a.then ()->
@@ -268,7 +269,7 @@ exports['Assets'] = (cb)->
       sources = "./site/dist/assets/**/*"
       a=pfs(
         gulp.src sources
-          .pipe examineBundle title: "nia-web ASSET bundle", minimal:false
+          .pipe examineBundle title: "nia-web ASSET bundle", minimal:true
           .pipe gulp.dest "sites/public/assets"
       )
       a.then ()->
@@ -300,34 +301,26 @@ exports['Css'] = do (site) -> return (cb)->
 exports.watch = (cb)->
   gulp.watch './site/templates/**/*.css',exports.Css
   gulp.watch ["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ] , exports.Assets
-  gulp.watch  "./site/templates/**/*.coffee", exports.AppJs
+  gulp.watch  "./site/templates/**/*.coffee", exports.Html
   cb()
 
-exports.dist = (cb)=>
+exports.dist = (cb)->
     console.log "Activating Series",site
-    exports["VendorJs"]()
-    exports["AppJs"]()
-    exports["Html"]()
-    exports["Css"]()
-    exports["Assets"]()
+    gulp.series exports.VendorJs, exports.AppJs, exports.Html, exports.Css, exports.Assets
     cb()
-    
-exports.default = exports.start =  gulp.series  exports.dist, gulp.parallel initBrowserSync, exports.watch
 
-    // Init live server browser sync
-initBrowserSync(done)->
+# Init live server browser sync
+initBrowserSync = (done)->
   browserSync.init
-    server:  baseDir: site/public 
+    server:
+      baseDir: "#{process.env.PWD}/site/public"
     logLevel: "debug"
     port: 3000
     localOnly: false
-    open: 'external-ui'
-    host: uiHost
-    ui: {  host: uiHost, UI_HOST: uiHost, 'ui-host':uiHost }
-    'ui-external': uiHost
     notify: true
   done();
 
+exports.default = exports.start =  gulp.series(exports.dist, gulp.parallel(initBrowserSync, exports.watch))
 console.log exports
 
 return
