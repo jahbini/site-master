@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM bamboojim/theia-ide:1.0.0
 
 # Install custom tools, runtimes, etc.
 # For example "bastet", a command-line tetris clone:
