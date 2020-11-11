@@ -2,4 +2,5 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: yarn global add gulp-cli && yarn install
+  - init: npm install -g gulp-cli && yarn install
+  - command: gulp
