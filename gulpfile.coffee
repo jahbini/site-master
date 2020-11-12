@@ -167,7 +167,7 @@ exports.Html = (cb)->
         .pipe coffee()
         .pipe examine()
         .pipe gulp.dest("site/public/")
-        .pipe browserSync()
+        .pipe browserSync.stream()
     )
     b=()->
       console.log "starting Mystories"
@@ -189,8 +189,9 @@ exports.Html = (cb)->
         .pipe gulp.dest "site/public/"
         )
     a.then( b).then(c).then ()->
-     console.log "DONE HTML and stories"
-     cb() if cb
+      browserSync.stream()
+      console.log "DONE HTML and stories"
+      cb() if cb
 
 exports['AppJs'] = (cb)->
     console.log "in JS"
@@ -214,6 +215,7 @@ exports['AppJs'] = (cb)->
       #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
       .pipe examineBundle verbose:true,minimal:true
       .pipe gulp.dest("site/public/")
+      .pipe browserSync.stream()
       
 exports['VendorJs'] =  (cb)->
     gulp.src([
@@ -255,6 +257,7 @@ require.alias('jquery/dist/jquery.js','jquery');
 require("jquery");
      """
      .pipe gulp.dest "./site/public/"
+     .pipe browserSync.stream()
 
 exports['Assets'] = (cb)->
     console.log site, "performing Assets"
