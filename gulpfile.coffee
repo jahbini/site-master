@@ -33,6 +33,7 @@ bpr= require './node_modules/browser-pack-register/index.js'
 coffee = require 'gulp-coffee'
 wrapCommonJS = require "gulp-wrap-commonjs"
 requireJSSource =  fs.readFileSync "./node_modules/commonjs-require-definition/require.js"
+gulpWatch = require 'gulp-watch'
 
 through = require('through2')
 tildify = require('tildify')
@@ -152,6 +153,7 @@ exports.Html = (cb)->
     console.log "Generating site"
     a=pfs(
       gulp.src("./site/templates/**/*.coffee")
+        .pipe gulpWatch  "./site/templates/**/*.coffee"
         .pipe gulpInsert.prepend HalvallaCard
         .pipe gulpInsert.prepend siteTemplate
         .pipe gulpInsert.append """
@@ -165,6 +167,7 @@ exports.Html = (cb)->
         .pipe coffee()
         .pipe examine()
         .pipe gulp.dest("site/public/")
+        .pipe browserSync()
     )
     b=()->
       console.log "starting Mystories"
@@ -301,7 +304,9 @@ exports['Css'] = do (site) -> return (cb)->
 exports.watch = (cb)->
   gulp.watch './site/templates/**/*.css',exports.Css
   gulp.watch ["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ] , exports.Assets
-  gulp.watch  "./site/templates/**/*.coffee", exports.Html
+  gulp.watch  "./site/templates/**/*.coffee",exports.Html().then (done)->
+    browserSync.reload()
+    console.log done,"DONE"
   cb()
 
 exports.dist = (cb)->

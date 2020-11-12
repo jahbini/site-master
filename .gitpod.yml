@@ -4,3 +4,11 @@ image:
 tasks:
   - init: npm install -g gulp-cli && yarn install
   - command: gulp
+  
+ports:
+  - port: 3000
+    onOpen: notify
+  - port: 3001
+    onOpen: notify
+  - port: 3002
+    onOpen: notify
