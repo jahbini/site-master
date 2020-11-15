@@ -1,6 +1,8 @@
 
 ### installation harness for site-master syndication system
 
+Last Master Version, now brunch-style
+
 This repository defines the host directory structure
 for multiple sites running in syndication with static serving via nginx.
 
