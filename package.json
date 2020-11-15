@@ -2,9 +2,11 @@
   "name": "site-master",
   "version": "1.0.0",
   "description": "gulp conversion of site-ooader from brunch",
-  "main": "index.js",
+  "main": "gulpfile.coffee",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node_modules/.bin/gulp start",
+    "watch": "node_modules/.bin/gulp watch",
+    "dist": "node_modules/.bin/gulp"
     "gitget": "git clone https://github.com/jahbini/bamboosnow site; cd site; yarn install"
   },
   "repository": {
@@ -44,12 +46,11 @@
     "del": "^5.1.0",
     "factor-vinylify": "^3.0.4",
     "font-face-observer": "^1.0.0",
-    "global": "^4.4.0",
     "gulp": "^4.0.2",
+    "gulp-cli":"latest",
     "gulp-add-src": "^1.0.0",
     "gulp-autoprefixer": "^7.0.1",
     "gulp-beautify": "^3.0.0",
-    "gulp-cli": "^2.3.0",
     "gulp-coffee": "^3.0.3",
     "gulp-concat": "^2.6.1",
     "gulp-debug": "^4.0.0",
@@ -59,7 +60,6 @@
     "gulp-rename": "^2.0.0",
     "gulp-sass": "^4.1.0",
     "gulp-sequence": "^1.0.0",
-    "gulp-watch": "^5.0.1",
     "halvalla": "^1.8.4",
     "jquery": "^3.5.1",
     "lodash": "^4.17.15",
