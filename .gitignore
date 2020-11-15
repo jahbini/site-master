@@ -1,7 +1,8 @@
-public-*
+public*
 sites-enabled-default
+node_modules/
 .c9/*
-sites/*
+site/*
 newfiles/
 site-loader
 site-loader/*

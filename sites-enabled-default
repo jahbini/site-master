@@ -8,6 +8,40 @@ server {
 		try_files $uri $uri/ =404;
 	}
 }
+
+server {
+	server_name ccbs.nia.edu.kh www.ccbs.nia.edu.kh;
+	access_log /var/log/nginx/cambodiancenterforbamboostudies.log vhost;
+	root /home/mar1on/site-master/sites/cambodiancenterforbamboostudies/public;
+	location / {
+		try_files $uri $uri.html $uri/index.html =404;
+		error_page 404 /404.html;
+		location /404.html {
+			root /home/mar1on/site-master/sites/cambodiancenterforbamboostudies/public/error;
+		}
+	}
+  listen 443 ssl; # managed by Certbot
+  include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+server {
+    if ($host = www.ccbs.nia.edu.kh) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = ccbs.nia.edu.kh) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+	listen 80 ;
+	listen [::]:80 ;
+    server_name www.ccbs.nia.edu.kh ccbs.nia.edu.kh;
+    return 404; # managed by Certbot
+}
+
+
 server {
 	server_name cambodiancenterforbamboostudies.com www.cambodiancenterforbamboostudies.com;
 	access_log /var/log/nginx/cambodiancenterforbamboostudies.log vhost;
@@ -42,11 +76,8 @@ server {
 	listen [::]:80 ;
     server_name www.cambodiancenterforbamboostudies.com cambodiancenterforbamboostudies.com;
     return 404; # managed by Certbot
-
-
-
-
 }
+
 server {
 	server_name bamboosnow.com www.bamboosnow.com;
 	access_log /var/log/nginx/bamboosnow.log vhost;
