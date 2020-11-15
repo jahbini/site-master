@@ -50,7 +50,6 @@
     "gulp-add-src": "^1.0.0",
     "gulp-autoprefixer": "^7.0.1",
     "gulp-beautify": "^3.0.0",
-    "gulp-cli": "latest",
     "gulp-coffee": "^3.0.3",
     "gulp-concat": "^2.6.1",
     "gulp-debug": "^4.0.0",
