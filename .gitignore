@@ -1,5 +1,6 @@
 public*
 sites-enabled-default
+node_modules/
 .c9/*
 site/*
 newfiles/
