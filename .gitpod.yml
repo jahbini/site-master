@@ -2,8 +2,8 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: npm install -g gulp-cli && yarn install
-  - command: gulp
+  - init: yarn install
+
   
 ports:
   - port: 3000
