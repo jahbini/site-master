@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node_modules/.bin/gulp start",
     "watch": "node_modules/.bin/gulp watch",
-    "dist": "node_modules/.bin/gulp"
+    "dist": "node_modules/.bin/gulp",
     "gitget": "git clone https://github.com/jahbini/bamboosnow site; cd site; yarn install"
   },
   "repository": {
