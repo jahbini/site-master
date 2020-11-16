@@ -1,10 +1,10 @@
 image:
   file: .gitpod.Dockerfile
-
+  
 tasks:
   - init: yarn install
-
-  
+    command: yarn run start
+    
 ports:
   - port: 3000
     onOpen: notify
