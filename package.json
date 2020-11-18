@@ -1,6 +1,6 @@
 {
   "name": "site-master",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "gulp conversion of site-ooader from brunch",
   "main": "gulpfile.coffee",
   "scripts": {
@@ -60,6 +60,7 @@
     "gulp-sass": "^4.1.0",
     "gulp-sequence": "^1.0.0",
     "gulp-watch": "^5.0.1",
+    "gulp-wrap-commonjs": "^0.1.14",
     "halvalla": "^1.8.4",
     "jquery": "^3.5.1",
     "lodash": "^4.17.15",
@@ -73,6 +74,5 @@
     "vinylify": "^0.0.2"
   },
   "devDependencies": {
-    "gulp-wrap-commonjs": "^0.1.14"
   }
 }
