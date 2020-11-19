@@ -6,7 +6,7 @@ B = require 'backbone'
 #Link = T.bless Link
 #PanelHeader = T.bless PanelHeader
 
-Template = require "payload-/run-time-template.coffee"
+Template = require "./payload-/run-time-template.coffee"
 template = new Template T
 
 module.exports =  T.bless class Sidebar extends B.Model
