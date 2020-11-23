@@ -28,7 +28,7 @@ Pylon.on 'all', (event,rest...)->
   return null
 
 
-FontFaceObserver = require 'font-face-observer'
+#FontFaceObserver = require 'font-face-observer'
 T = Pylon.Halvalla
 Mithril = Pylon.Mithril
 Sidebar = require './components/sidebar-view'

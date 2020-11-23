@@ -21,6 +21,6 @@ class Stories extends Collection
   fetch: =>
     @push @someStories
 module.exports =
-  allStories: new Stories allStories
+  allStories: new Stories allStories?
   myStories: new Stories myStories
   Class: Stories
