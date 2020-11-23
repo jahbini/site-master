@@ -1,6 +1,14 @@
 #
 # Brunch-config.coffee meta file
 #
+siteDir = process.env.PWD
+nodeModules = "#{siteDir}/node_modules/"
+siteTemplates = "#{siteDir}/templates/"
+sitePublic = "#{siteDir}/public/"
+sitePayload = "#{siteDir}/payload-/"
+myDir = "#{siteDir}/node_modules/site-master/"
+console.log "PAYLOAD",sitePayload
+
 Backbone = require 'backbone'
 _=require 'lodash'
 path = require 'path'
@@ -29,10 +37,10 @@ source=require 'vinyl-source-stream'
 buffer=require 'vinyl-buffer'
 deamdify = require 'deamdify'
 coffeeify = require 'coffeeify'
-bpr= require './node_modules/browser-pack-register/index.js'
+bpr= require nodeModules+'/browser-pack-register/index.js'
 coffee = require 'gulp-coffee'
 wrapCommonJS = require "gulp-wrap-commonjs"
-requireJSSource =  fs.readFileSync "./node_modules/commonjs-require-definition/require.js"
+requireJSSource =  fs.readFileSync nodeModules+"/commonjs-require-definition/require.js"
 gulpWatch = require 'gulp-watch'
 
 through = require('through2')
@@ -41,7 +49,7 @@ stringifyObject = require('stringify-object')
 objectAssign = require('object-assign')
 plur = require('plur')
 chalk = require('chalk')
-siteDef = require './site/site.coffee'
+siteDef = require siteDir+'/site.coffee'
 prop = chalk.blue
 
 for key of siteDef
@@ -73,11 +81,16 @@ examineBundle = (opts) ->
     title: 'gulp-browserify-debug:'
     minimal: true
   }, opts)
+  opts.verbose = true
+  opts.minimal = false
   if process.argv.indexOf('--verbose') != -1
     opts.verbose = true
     opts.minimal = false
   count = 0
   through.obj ((file, enc, cb) ->
+    console.log "FILE"
+    for keys,vals of file
+      console.log key,vals
     full = '\n' + (if file.cwd then 'cwd:   ' + prop(tildify(file.cwd)) else '') + (if file.base then '\nbase:  ' + prop(tildify(file.base)) else '') + (if file.path then '\npath:  ' + prop(tildify(file.path)) else '') + (if file.stat and opts.verbose then '\nstat:  ' + prop(stringifyObject(file.stat, indent: '       ').replace(/[{}]/g, '').trim()) else '') + '\n'
     output = if opts.minimal then prop(path.relative(process.cwd(), file.path)) else full
     count++
@@ -148,12 +161,12 @@ bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 
 
 exports.Html = (cb)->
     console.log "in HTML"
-    siteTemplate = fs.readFileSync "./site/templates/bamboosnowtemplate.coffee"
-    HalvallaCard = fs.readFileSync "./site/templates/card.coffee"
+    siteTemplate = fs.readFileSync "#{siteTemplates}/sitetemplate.coffee"
+    HalvallaCard = fs.readFileSync "#{siteTemplates}/card.coffee"
     console.log "Generating site"
     a=pfs(
-      gulp.src("./site/templates/**/*.coffee")
-        .pipe gulpWatch  "./site/templates/**/*.coffee"
+      gulp.src("#{siteTemplates}/**/*.coffee")
+        #.pipe gulpWatch  "#{siteTemplates}/**/*.coffee"
         .pipe gulpInsert.prepend HalvallaCard
         .pipe gulpInsert.prepend siteTemplate
         .pipe gulpInsert.append """
@@ -166,106 +179,99 @@ exports.Html = (cb)->
           """
         .pipe coffee()
         .pipe examine()
-        .pipe gulp.dest("site/public/")
-        .pipe browserSync.stream()
+        .pipe gulp.dest sitePublic
     )
     b=()->
       console.log "starting Mystories"
       myStories = allDB.filter site: site
       allStories = allDB
-      
-      return pfs(gulp.src('./mystories.json', allowEmpty:true)
-        .pipe gulpInsert.append "myStories=#{JSON.stringify myStories}"
-        .pipe rename 'mystories.json'
-        .pipe gulp.dest "site/public/"
-        )
+      return new Promise  (r,f)-> 
+        fs.writeFile sitePublic+"/mystories.json", "myStories=#{JSON.stringify myStories}",r()
     c=()->
       console.log "starting allstories"
       allStories = allDB
+      return new Promise  (r,f)-> 
+        fs.writeFile sitePublic+"/allstories.json",
+          "allStories=#{JSON.stringify allStories}"
+          r()
       
-      return pfs(gulp.src('./allstories.json', allowEmpty:true)
-        .pipe gulpInsert.append "allStories=#{JSON.stringify allStories.toJSON()}"
-        .pipe rename 'allstories.json'
-        .pipe gulp.dest "site/public/"
-        )
     a.then( b).then(c).then ()->
       browserSync.stream()
       console.log "DONE HTML and stories"
       cb() if cb
 
 exports['AppJs'] = (cb)->
-    console.log "in JS"
-    debugger
-    bb= browserify "./app/initialize.coffee",
+    console.log "in JS again"
+    bb= browserify "app/initialize.coffee",
       transform: [coffeeify,deamdify]
       extensions: ['.coffee']
       fullPaths: true
-      paths:['./node_modules','./app',"./site","./site/payload-","./site/node_modules"]
-      basedir: process.env.PWD
+      paths:[nodeModules,"#{myDir}/app",sitePayload]
+      basedir: "."
       prelude: "JAH bcp here"
       read:false
-    bb.require './app/initialize.coffee'
+    bb.require "initialize.coffee"
     xx= bb.pipeline.get 'pack'
     yy= xx.pop()
-    #xx.push bpr raw:true, prelude: requireJSSource.toString()
-    xx.push bpr raw:true
+    xx.push bpr raw:true, prelude: requireJSSource.toString()
+    #xx.push bpr raw:true
     b1= toVinyl bb
-    b2= b1.bundle("assets/js/app.js")
-      #.pipe wrapCommonJS relativePath:"./node_modules/"
-      #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
-      .pipe examineBundle verbose:true,minimal:true
-      .pipe gulp.dest("site/public/")
+    b2= b1.bundle "waawaa"
+      #.pipe wrapCommonJS relativePath:"./"
+      .pipe(concat "assets/js/app.js")
+      #.pipe gulpInsert.prepend requireJSSource + ";"
+      .pipe gulp.dest sitePublic
       .pipe browserSync.stream()
       
 exports['VendorJs'] =  (cb)->
+    console.log "VendorJs",process.env.PWD,nodeModules
     gulp.src([
-        "./node_modules/jquery/dist/jquery.js"
-        "./node_modules/asap/asap.js"
+        "node_modules/jquery/dist/jquery.js"
+        "#{nodeModules}/asap/asap.js"
       ])
-     .pipe gulpAddSource.append './node_modules/bootstrap/dist/js/bootstrap.js'
-     .pipe gulpAddSource.append './node_modules/backbone/backbone.js'
-     .pipe gulpAddSource.append './node_modules/base64-js/index.js'
-     .pipe gulpAddSource.append './node_modules/buffer/index.js'
-     .pipe gulpAddSource.append './node_modules/chroma-js/chroma.js'
-     .pipe gulpAddSource.append './node_modules/font-face-observer/src/dom.js'
-     .pipe gulpAddSource.append './node_modules/font-face-observer/src/observer.js'
-     .pipe gulpAddSource.append './node_modules/font-face-observer/src/ruler.js'
-     .pipe gulpAddSource.append './node_modules/halvalla/lib/halvalla-mithril.js'
-     .pipe gulpAddSource.append './node_modules/halvalla/lib/html-tags.js'
-     .pipe gulpAddSource.append './node_modules/halvalla/lib/name-mine.js'
-     .pipe gulpAddSource.append './node_modules/halvalla/lib/halvalla.js'
-     .pipe gulpAddSource.append './node_modules/halvalla/lib/teacup.js'
-     .pipe gulpAddSource.append './node_modules/ieee754/index.js'
-     .pipe gulpAddSource.append './node_modules/isarray/index.js'
-     .pipe gulpAddSource.append './node_modules/mithril/mithril.js'
-     .pipe gulpAddSource.append './node_modules/mss-js/mss.js'
-     .pipe gulpAddSource.append './node_modules/palx/dist/hue-name.js'
-     .pipe gulpAddSource.append './node_modules/palx/dist/index.js'
-     .pipe gulpAddSource.append './node_modules/process/browser.js'
-     .pipe gulpAddSource.append './node_modules/promise/index.js'
-     .pipe gulpAddSource.append './node_modules/promise/lib/node-extensions.js'
-     .pipe gulpAddSource.append './node_modules/promise/lib/es6-extensions.js'
-     .pipe gulpAddSource.append './node_modules/promise/lib/done.js'
-     .pipe gulpAddSource.append './node_modules/promise/lib/core.js'
-     .pipe gulpAddSource.append './node_modules/underscore/underscore.js'
-     .pipe wrapCommonJS relativePath:"./node_modules/"
-     .pipe examineBundle verbose:true,minimal:true
+     .pipe gulpAddSource.append "#{nodeModules}/bootstrap/dist/js/bootstrap.js"
+     .pipe gulpAddSource.append "#{nodeModules}/backbone/backbone.js"
+     .pipe gulpAddSource.append "#{nodeModules}/base64-js/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/buffer/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/chroma-js/chroma.js"
+     .pipe gulpAddSource.append "#{nodeModules}/font-face-observer/src/dom.js"
+     .pipe gulpAddSource.append "#{nodeModules}/font-face-observer/src/observer.js"
+     .pipe gulpAddSource.append "#{nodeModules}/font-face-observer/src/ruler.js"
+     .pipe gulpAddSource.append "#{nodeModules}/halvalla/lib/halvalla-mithril.js"
+     .pipe gulpAddSource.append "#{nodeModules}/halvalla/lib/html-tags.js"
+     .pipe gulpAddSource.append "#{nodeModules}/halvalla/lib/name-mine.js"
+     .pipe gulpAddSource.append "#{nodeModules}/halvalla/lib/halvalla.js"
+     .pipe gulpAddSource.append "#{nodeModules}/halvalla/lib/teacup.js"
+     .pipe gulpAddSource.append "#{nodeModules}/ieee754/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/isarray/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/mithril/mithril.js"
+     .pipe gulpAddSource.append "#{nodeModules}/mss-js/mss.js"
+     .pipe gulpAddSource.append "#{nodeModules}/palx/dist/hue-name.js"
+     .pipe gulpAddSource.append "#{nodeModules}/palx/dist/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/process/browser.js"
+     .pipe gulpAddSource.append "#{nodeModules}/promise/index.js"
+     .pipe gulpAddSource.append "#{nodeModules}/promise/lib/node-extensions.js"
+     .pipe gulpAddSource.append "#{nodeModules}/promise/lib/es6-extensions.js"
+     .pipe gulpAddSource.append "#{nodeModules}/promise/lib/done.js"
+     .pipe gulpAddSource.append "#{nodeModules}/promise/lib/core.js"
+     .pipe gulpAddSource.append "#{nodeModules}/underscore/underscore.js"
+     .pipe wrapCommonJS relativePath:"./"
      .pipe(concat "assets/js/vendor.js")
      .pipe gulpInsert.prepend requireJSSource + ";"
      .pipe gulpInsert.append """
-require.alias('jquery/dist/jquery.js','jquery');
+require.alias('node_modules/jquery/dist/jquery.js','jquery');
 require("jquery");
      """
-     .pipe gulp.dest "./site/public/"
+     .pipe gulp.dest sitePublic
      .pipe browserSync.stream()
 
 exports['Assets'] = (cb)->
     console.log site, "performing Assets"
-    sources=["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ]
+    sources=["#{sitePayload}/assets/**/*", "#{siteTemplates}/**/*.jpg", "#{siteTemplates}/**/*.png" ]
     a=pfs(
       gulp.src sources
         .pipe examineBundle title: "ASSET bundle", minimal:true
-        .pipe gulp.dest "site/public/"
+        .pipe gulp.dest sitePublic
     )
     a.then ()->
      console.log "DONE Assets"
@@ -276,7 +282,7 @@ exports['Assets'] = (cb)->
       a=pfs(
         gulp.src sources
           .pipe examineBundle title: "nia-web ASSET bundle", minimal:true
-          .pipe gulp.dest "sites/public/assets"
+          .pipe gulp.dest "#{sitePublic}/assets"
       )
       a.then ()->
        console.log "DONE nia-web Assets"
@@ -284,44 +290,43 @@ exports['Assets'] = (cb)->
 
 
 exports['Css'] = do (site) -> return (cb)->
-    console.log site, "performing CSS"
+    console.log site, "performing CSS into #{sitePublic}"
+    console.log "#{nodeModules}/ace-css/css/ace.min.css"
     a=gulp.src([
-        "./node_modules/blaze/scss/dist/blaze.min.css",
-        "./node_modules/ace-css/css/ace.min.css",
-        "./node_modules/basscss-grid/css/grid.css",
-        "./node_modules/bootstrap/dist/css/bootstrap.css",
-        "./site/templates/**/*.css" ])
+        "#{nodeModules}/blaze/scss/dist/blaze.min.css",
+        "#{nodeModules}/ace-css/css/ace.min.css",
+        "#{nodeModules}/basscss-grid/css/grid.css",
+        "#{nodeModules}/bootstrap/dist/css/bootstrap.css",
+        "#{siteTemplates}/**/*.css" ])
       .pipe(concat "assets/css/vendor.css")
-      .pipe gulp.dest "site/public/"
+      .pipe gulp.dest sitePublic
 
     b=()->
       console.log "starting B"
-      return pfs(gulp.src([ "./app/css/*.css" , "./site/payload-/*.css" ])
+      return pfs(gulp.src([ "#{myDir}/app/css/*.css" , "#{sitePayload}/*.css" ])
         .pipe concat "assets/css/app.css"
-        .pipe gulp.dest "site/public/"
+        .pipe gulp.dest sitePublic
         )
     pfs(a).then( b).then ()->
+      console.log "#{sitePublic}/assets/css/app.css"
       console.log("DONECSS")
       cb() if cb
     
 exports.watch = (cb)->
-  gulp.watch './site/templates/**/*.css',exports.Css
-  gulp.watch ["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ] , exports.Assets
-  gulp.watch  "./site/templates/**/*.coffee",exports.Html().then (done)->
+  gulp.watch "#{siteTemplates}/**/*.css",exports.Css
+  gulp.watch ["#{sitePayload}/assets/**/*", "#{siteTemplates}/**/*.jpg", "#{siteTemplates}/**/*.png" ] , exports.Assets
+  gulp.watch  "#{siteTemplates}/**/*.coffee",exports.Html().then (done)->
     browserSync.reload()
     console.log done,"DONE"
   cb()
 
-exports.dist = (cb)->
-    console.log "Activating Series",site
-    gulp.series exports.VendorJs, exports.AppJs, exports.Html, exports.Css, exports.Assets
-    cb()
+exports.dist = gulp.series exports.Assets,exports.VendorJs, exports.AppJs, exports.Html, exports.Css
 
 # Init live server browser sync
 initBrowserSync = (done)->
   browserSync.init
     server:
-      baseDir: "#{process.env.PWD}/site/public"
+      baseDir: sitePublic
     logLevel: "debug"
     port: 3000
     localOnly: false
