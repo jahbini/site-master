@@ -1,6 +1,6 @@
 {
   "name": "site-master",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "gulp conversion of site-ooader from brunch",
   "main": "gulpfile.coffee",
   "scripts": {
@@ -73,6 +73,5 @@
     "vinyl-source-stream": "^2.0.0",
     "vinylify": "^0.0.2"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
