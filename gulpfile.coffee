@@ -201,32 +201,30 @@ exports.Html = (cb)->
       cb() if cb
 
 exports['AppJs'] = (cb)->
-    console.log "in JS again"
+    console.log "in appJS"
     bb= browserify "app/initialize.coffee",
       transform: [coffeeify,deamdify]
       extensions: ['.coffee']
       fullPaths: true
       paths:[nodeModules,"#{myDir}/app",sitePayload]
-      basedir: "."
+      basedir: './'
       prelude: "JAH bcp here"
       read:false
-    bb.require "initialize.coffee"
+    #bb.require "app/initialize.coffee"
     xx= bb.pipeline.get 'pack'
     yy= xx.pop()
-    xx.push bpr raw:true, prelude: requireJSSource.toString()
-    #xx.push bpr raw:true
+    #xx.push bpr raw:true, prelude: requireJSSource.toString()
+    xx.push bpr raw:true, prelude: ''
     b1= toVinyl bb
-    b2= b1.bundle "waawaa"
-      #.pipe wrapCommonJS relativePath:"./"
+    b2= b1.bundle "app"
       .pipe(concat "assets/js/app.js")
-      #.pipe gulpInsert.prepend requireJSSource + ";"
       .pipe gulp.dest sitePublic
       .pipe browserSync.stream()
       
 exports['VendorJs'] =  (cb)->
     console.log "VendorJs",process.env.PWD,nodeModules
     gulp.src([
-        "node_modules/jquery/dist/jquery.js"
+        "#{nodeModules}/jquery/dist/jquery.js"
         "#{nodeModules}/asap/asap.js"
       ])
      .pipe gulpAddSource.append "#{nodeModules}/bootstrap/dist/js/bootstrap.js"
@@ -255,11 +253,16 @@ exports['VendorJs'] =  (cb)->
      .pipe gulpAddSource.append "#{nodeModules}/promise/lib/done.js"
      .pipe gulpAddSource.append "#{nodeModules}/promise/lib/core.js"
      .pipe gulpAddSource.append "#{nodeModules}/underscore/underscore.js"
-     .pipe wrapCommonJS relativePath:"./"
+     .pipe wrapCommonJS 
+       pathModifier: (fp)->
+         fp = (fp.match /.*node_modules\/(.*)/)[1]
+         console.log "FILENAME=",fp
+         return fp
+       #relativePath:'../../cambodia/bamboosnow/node_modules'
      .pipe(concat "assets/js/vendor.js")
      .pipe gulpInsert.prepend requireJSSource + ";"
      .pipe gulpInsert.append """
-require.alias('node_modules/jquery/dist/jquery.js','jquery');
+require.alias('jquery/dist/jquery.js','jquery');
 require("jquery");
      """
      .pipe gulp.dest sitePublic
@@ -270,7 +273,7 @@ exports['Assets'] = (cb)->
     sources=["#{sitePayload}/assets/**/*", "#{siteTemplates}/**/*.jpg", "#{siteTemplates}/**/*.png" ]
     a=pfs(
       gulp.src sources
-        .pipe examineBundle title: "ASSET bundle", minimal:true
+        #.pipe examineBundle title: "ASSET bundle", minimal:true
         .pipe gulp.dest sitePublic
     )
     a.then ()->
