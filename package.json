@@ -69,6 +69,7 @@
     "moment": "^2.27.0",
     "mss-js": "^0.3.2",
     "palx": "^1.0.3",
+    "through2": "^4.0.2",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
     "vinylify": "^0.0.2"

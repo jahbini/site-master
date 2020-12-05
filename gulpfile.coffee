@@ -259,6 +259,7 @@ exports['VendorJs'] =  (cb)->
      .pipe gulpInsert.prepend requireJSSource + ";"
      .pipe gulpInsert.append """
 require.alias('jquery/dist/jquery.js','jquery');
+require.alias('mithril/hyperscript','../mithril/hyperscript');
 require("jquery");
      """
      .pipe gulp.dest sitePublic
