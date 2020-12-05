@@ -4,8 +4,9 @@
   "description": "gulp conversion of site-ooader from brunch",
   "main": "index.js",
   "scripts": {
+    "start": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "gitget": "git clone https://github.com/jahbini/bamboosnow site; cd site; yarn install"
+    "gitget": "yarn install; git clone https://github.com/jahbini/bamboosnow site; cd site; yarn install"
   },
   "repository": {
     "type": "git",
@@ -65,9 +66,9 @@
     "moment": "^2.27.0",
     "mss-js": "^0.3.2",
     "palx": "^1.0.3",
+    "vinyl": "^2.2.1",
     "vinyl-buffer": "^1.0.1",
-    "vinyl-source-stream": "^2.0.0",
-    "vinylify": "^0.0.2"
+    "vinyl-source-stream": "^2.0.0"
   },
   "devDependencies": {
     "gulp-wrap-commonjs": "^0.1.14"

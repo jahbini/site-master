@@ -687,13 +687,6 @@ bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bl@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-0.7.0.tgz#3fb0670602ac2878eb770dc2039f1836be62ae5b"
-  integrity sha1-P7BnBgKsKHjrdw3CA58YNr5irls=
-  dependencies:
-    readable-stream "~1.0.2"
-
 bl@^1.2.1:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/bl/-/bl-1.2.3.tgz#1e8dd80142eac80d7158c9dccc047fb620e035e7"
@@ -1234,7 +1227,7 @@ clone-buffer@^1.0.0:
   resolved "https://registry.yarnpkg.com/clone-buffer/-/clone-buffer-1.0.0.tgz#e3e25b207ac4e701af721e2cb5a16792cac3dc58"
   integrity sha1-4+JbIHrE5wGvch4staFnksrD3Fg=
 
-clone-stats@^0.0.1, clone-stats@~0.0.1:
+clone-stats@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/clone-stats/-/clone-stats-0.0.1.tgz#b88f94a82cf38b8791d58046ea4029ad88ca99d1"
   integrity sha1-uI+UqCzzi4eR1YBG6kAprYjKmdE=
@@ -2863,7 +2856,7 @@ gulp-sequence@^1.0.0:
   dependencies:
     thunks "^4.9.0"
 
-gulp-util@*, gulp-util@^3.0.1:
+gulp-util@*:
   version "3.0.8"
   resolved "https://registry.yarnpkg.com/gulp-util/-/gulp-util-3.0.8.tgz#0054e1e744502e27c04c187c3ecc505dd54bbb4f"
   integrity sha1-AFTh50RQLifATBh8PsxQXdVLu08=
@@ -4973,7 +4966,7 @@ readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable
     string_decoder "~1.1.1"
     util-deprecate "~1.0.1"
 
-readable-stream@~1.0.17, readable-stream@~1.0.2, readable-stream@~1.0.33:
+readable-stream@~1.0.17, readable-stream@~1.0.33:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
   integrity sha1-Elgg40vIQtLyqq+v5MKRbuMsFXw=
@@ -5952,14 +5945,6 @@ through2@*:
   dependencies:
     readable-stream "3"
 
-through2@^0.4.1, through2@~0.4.1:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/through2/-/through2-0.4.2.tgz#dbf5866031151ec8352bb6c4db64a2292a840b9b"
-  integrity sha1-2/WGYDEVHsg1K7bE22SiKSqEC5s=
-  dependencies:
-    readable-stream "~1.0.17"
-    xtend "~2.1.1"
-
 through2@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/through2/-/through2-0.5.1.tgz#dfdd012eb9c700e2323fd334f38ac622ab372da7"
@@ -5992,10 +5977,10 @@ through2@^3.0.1:
     inherits "^2.0.4"
     readable-stream "2 || 3"
 
-through2@~0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/through2/-/through2-0.3.0.tgz#2d1d28c8d1daf8d9c5cb78f0a69343c6b8642d97"
-  integrity sha1-LR0oyNHa+NnFy3jwppNDxrhkLZc=
+through2@~0.4.1:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/through2/-/through2-0.4.2.tgz#dbf5866031151ec8352bb6c4db64a2292a840b9b"
+  integrity sha1-2/WGYDEVHsg1K7bE22SiKSqEC5s=
   dependencies:
     readable-stream "~1.0.17"
     xtend "~2.1.1"
@@ -6331,14 +6316,6 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-vinyl-buffer@0.0.0:
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/vinyl-buffer/-/vinyl-buffer-0.0.0.tgz#d197a824badcb11cccf9643ac91be24d43eda8db"
-  integrity sha1-0ZeoJLrcsRzM+WQ6yRviTUPtqNs=
-  dependencies:
-    bl "^0.7.0"
-    through2 "^0.4.1"
-
 vinyl-buffer@^1.0.0, vinyl-buffer@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/vinyl-buffer/-/vinyl-buffer-1.0.1.tgz#96c1a3479b8c5392542c612029013b5b27f88bbf"
@@ -6369,14 +6346,6 @@ vinyl-fs@^3.0.0, vinyl-fs@~3.0.2:
     value-or-function "^3.0.0"
     vinyl "^2.0.0"
     vinyl-sourcemap "^1.1.0"
-
-vinyl-source-stream@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/vinyl-source-stream/-/vinyl-source-stream-0.1.1.tgz#a53a4f21a07a234695e04c2703f9f1b5b9084595"
-  integrity sha1-pTpPIaB6I0aV4EwnA/nxtbkIRZU=
-  dependencies:
-    through2 "~0.3.0"
-    vinyl "~0.2.2"
 
 vinyl-source-stream@^1.1.0:
   version "1.1.2"
@@ -6438,7 +6407,7 @@ vinyl@^0.5.0:
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
 
-vinyl@^2.0.0, vinyl@^2.1.0:
+vinyl@^2.0.0, vinyl@^2.1.0, vinyl@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/vinyl/-/vinyl-2.2.1.tgz#23cfb8bbab5ece3803aa2c0a1eb28af7cbba1974"
   integrity sha512-LII3bXRFBZLlezoG5FfZVcXflZgWP/4dCwKtxd5ky9+LOtM4CS3bIRQsmR1KMnMW07jpE8fqR2lcxPZ+8sJIcw==
@@ -6449,22 +6418,6 @@ vinyl@^2.0.0, vinyl@^2.1.0:
     cloneable-readable "^1.0.0"
     remove-trailing-separator "^1.0.1"
     replace-ext "^1.0.0"
-
-vinyl@~0.2.2:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/vinyl/-/vinyl-0.2.3.tgz#bca938209582ec5a49ad538a00fa1f125e513252"
-  integrity sha1-vKk4IJWC7FpJrVOKAPofEl5RMlI=
-  dependencies:
-    clone-stats "~0.0.1"
-
-vinylify@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/vinylify/-/vinylify-0.0.2.tgz#ca4cb2719561f7a9b95629ba3b4fb40d68f27b38"
-  integrity sha1-ykyycZVh96m5Vim6O0+0DWjyezg=
-  dependencies:
-    gulp-util "^3.0.1"
-    vinyl-buffer "0.0.0"
-    vinyl-source-stream "^0.1.1"
 
 vlq@^0.2.1:
   version "0.2.3"

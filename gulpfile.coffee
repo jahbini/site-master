@@ -24,7 +24,7 @@ os = require('os')
 pkg = require('./package.json')
 # browserify stuff
 browserify = require 'browserify'
-#vinylify = require "vinylify"
+Vinyl = require "vinyl"
 source=require 'vinyl-source-stream'
 buffer=require 'vinyl-buffer'
 deamdify = require 'deamdify'
@@ -45,15 +45,15 @@ prop = chalk.blue
 
 for key of siteDef
   site = key
-
   console.log "SITE!!:",site
-
 
 DBModel = Backbone.Model.extend
   default:
     draft: true
+
 DBColl = Backbone.Collection.extend
   model: DBModel
+
 allDB = new DBColl()
 
 dumpDB= ()->
@@ -145,7 +145,7 @@ toVinyl = (b) ->
 bcp = fs.readFileSync(require.resolve('browserify-common-prelude/dist/bcp.js'), 'utf-8')
 #
 
-exports.Html = (cb)->
+exports.Html = Html = (cb)->
     console.log "in HTML"
     siteTemplate = fs.readFileSync "./site/templates/bamboosnowtemplate.coffee"
     HalvallaCard = fs.readFileSync "./site/templates/card.coffee"
@@ -155,7 +155,7 @@ exports.Html = (cb)->
         .pipe gulpInsert.prepend HalvallaCard
         .pipe gulpInsert.prepend siteTemplate
         .pipe gulpInsert.append """
-          debugger
+          #debugger
           unless renderer?
             return JSON.stringify {db:false,html:''}
           t= (T.render (new renderer db).html)
@@ -166,32 +166,31 @@ exports.Html = (cb)->
         .pipe examine()
         .pipe gulp.dest("site/public/")
     )
-    b=()->
-      console.log "starting Mystories"
-      myStories = allDB.filter site: site
-      allStories = allDB
-      
-      return pfs(gulp.src('./mystories.json', allowEmpty:true)
-        .pipe gulpInsert.append "myStories=#{JSON.stringify myStories}"
-        .pipe rename 'mystories.json'
-        .pipe gulp.dest "site/public/"
-        )
     c=()->
       console.log "starting allstories"
       allStories = allDB
       
-      return pfs(gulp.src('./allstories.json', allowEmpty:true)
+      return pfs(gulp.src 'wow', allowEmpty:true
         .pipe gulpInsert.append "allStories=#{JSON.stringify allStories.toJSON()}"
         .pipe rename 'allstories.json'
         .pipe gulp.dest "site/public/"
         )
-    a.then( b).then(c).then ()->
+    debugger
+    console.log "allDB=", allDB
+    w=()->
+      console.log "ALLDB", allDB
+      console.log "starting Mystories"
+      myStories = allDB.filter site: site
+      allStories = allDB
+      fs.writeFileSync 'site/public/mystories.json', "myStories=#{JSON.stringify allDB}"
+      return true
+    a.then(w).then(c).then ()->
      console.log "DONE HTML and stories"
+     browserSync.stream()
      cb() if cb
 
 exports['AppJs'] = (cb)->
     console.log "in JS"
-    debugger
     bb= browserify "./app/initialize.coffee",
       transform: [coffeeify,deamdify]
       extensions: ['.coffee']
@@ -211,8 +210,9 @@ exports['AppJs'] = (cb)->
       #.pipe gulpInsert.append "\nrequire.alias('../../assets/js/app.js','initialize');"
       .pipe examineBundle verbose:true,minimal:true
       .pipe gulp.dest("site/public/")
+      .pipe browserSync.stream()
       
-exports['VendorJs'] =  (cb)->
+exports.VendorJs = VenderJs =  (cb)->
     gulp.src([
         "./node_modules/jquery/dist/jquery.js"
         "./node_modules/asap/asap.js"
@@ -252,13 +252,15 @@ require.alias('jquery/dist/jquery.js','jquery');
 require("jquery");
      """
      .pipe gulp.dest "./site/public/"
+      .pipe browserSync.stream()
 
-exports['Assets'] = (cb)->
+exports.Assets = Assets = (cb)->
     console.log site, "performing Assets"
     sources=["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ]
     a=pfs(
       gulp.src sources
         .pipe examineBundle title: "ASSET bundle", minimal:true
+        .pipe browserSync.stream()
         .pipe gulp.dest "site/public/"
     )
     a.then ()->
@@ -271,13 +273,14 @@ exports['Assets'] = (cb)->
         gulp.src sources
           .pipe examineBundle title: "nia-web ASSET bundle", minimal:true
           .pipe gulp.dest "sites/public/assets"
+          .pipe browserSync.stream()
       )
       a.then ()->
        console.log "DONE nia-web Assets"
        cb() if cb
 
 
-exports['Css'] = do (site) -> return (cb)->
+exports.Css = Css  = do (site) -> return (cb)->
     console.log site, "performing CSS"
     a=gulp.src([
         "./node_modules/blaze/scss/dist/blaze.min.css",
@@ -287,40 +290,38 @@ exports['Css'] = do (site) -> return (cb)->
         "./site/templates/**/*.css" ])
       .pipe(concat "assets/css/vendor.css")
       .pipe gulp.dest "site/public/"
+      .pipe browserSync.stream()
 
     b=()->
       console.log "starting B"
       return pfs(gulp.src([ "./app/css/*.css" , "./site/payload-/*.css" ])
         .pipe concat "assets/css/app.css"
         .pipe gulp.dest "site/public/"
+        .pipe browserSync.stream()
         )
     pfs(a).then( b).then ()->
       console.log("DONECSS")
       cb() if cb
     
-exports.watch = (cb)->
+exports.watch = watch= (cb)->
   gulp.watch './site/templates/**/*.css',exports.Css
   gulp.watch ["./site/payload-/assets/**/*", "./site/templates/**/*.jpg", "./site/templates/**/*.png" ] , exports.Assets
   gulp.watch  "./site/templates/**/*.coffee", exports.Html
   cb()
 
-exports.dist = (cb)->
-    console.log "Activating Series",site
-    gulp.series exports.VendorJs, exports.AppJs, exports.Html, exports.Css, exports.Assets
-    cb()
+exports.distribute = distribute = gulp.series exports.VendorJs, exports.AppJs, exports.Html, exports.Css, exports.Assets
 
 # Init live server browser sync
 initBrowserSync = (done)->
   browserSync.init
     server:
       baseDir: "#{process.env.PWD}/site/public"
-    logLevel: "debug"
     port: 3000
     localOnly: false
     notify: true
   done();
 
-exports.default = exports.start =  gulp.series(exports.dist, gulp.parallel(initBrowserSync, exports.watch))
+exports.default = exports.start =  gulp.series(distribute , gulp.parallel(initBrowserSync, exports.watch))
 console.log exports
 
 return

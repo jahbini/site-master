@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:12
+FROM theiaide/theia:latest
 MAINTAINER jim@bamboocando.com
 
 RUN mkdir /site-master && apk update
@@ -12,8 +12,9 @@ RUN yarn install
 RUN rm -rf /site-master/site/*
 
 #RUN curl -LOu jahbini:Tqbfj0tlD https://github.com/jahbini/Stagserv/archive/mas
-RUN ls -lisa
+RUN ls -lisa site || ls 
 
-expose 3030
+expose 3000
+expose 3001
 CMD yarn run gitget; gulp  || sleep 5000
 
