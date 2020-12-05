@@ -65,8 +65,8 @@ DBColl = Backbone.Collection.extend
   model: DBModel
 allDB = new DBColl()
 
-dumpDB= ()->
-  #console.log allDB.toJSON()
+dumpDB= (title="DB DB DB")->
+  console.log title,allDB.toJSON()
 
 pfs = (stream) ->
     new Promise((resolve, reject) ->
@@ -100,9 +100,7 @@ examineBundle = (opts) ->
     return
   ), (cb) ->
     console.log opts.title + ' ' + chalk.green(count + ' ' + plur('item', count))
-    dumpDB()
     cb()
-    return
 
 examine = (opts) ->
   opts = objectAssign({
@@ -123,11 +121,9 @@ examine = (opts) ->
       file.extname ='.html'
       data = eval raw
       data = JSON.parse data
-      db=data.db
-      for key,val of db
-        allDB.push val unless key.match /^\d+$/
+      #console.log data
+      allDB.push  data.db
       html= data.html || ""
-      #allDB.push db
     catch err
       nc = err.toString()
       console.log  nc
@@ -139,7 +135,6 @@ examine = (opts) ->
   ), (cb) ->
     console.log opts.title + ' ' + chalk.green(count + ' ' + plur('item', count))
     cb()
-    return
 
 
 toVinyl = (b) ->
@@ -174,7 +169,7 @@ exports.Html = (cb)->
           unless renderer?
             return JSON.stringify {db:false,html:''}
           t= (T.render (new renderer db).html)
-          value= { db: db, html:t }
+          value= { id:id, db: db[id], html:t }
           return JSON.stringify(value)
           """
         .pipe coffee()
@@ -183,17 +178,19 @@ exports.Html = (cb)->
     )
     b=()->
       console.log "starting Mystories"
-      myStories = allDB.filter site: site
-      allStories = allDB
+      #dumpDB "my STORIES #{site}"
+      myStories = allDB.where site: site
+      #console.log "MY STORIES",JSON.stringify myStories
       return new Promise  (r,f)-> 
-        fs.writeFile sitePublic+"/mystories.json", "myStories=#{JSON.stringify myStories}",r()
+        console.log  "attempting write of mystories at #{sitePublic}/mystories.json"
+        fs.writeFile sitePublic+"mystories.json", "myStories=#{JSON.stringify myStories}",r
     c=()->
       console.log "starting allstories"
       allStories = allDB
       return new Promise  (r,f)-> 
         fs.writeFile sitePublic+"/allstories.json",
           "allStories=#{JSON.stringify allStories}"
-          r()
+          r
       
     a.then( b).then(c).then ()->
       browserSync.stream()
@@ -222,7 +219,7 @@ exports['AppJs'] = (cb)->
       .pipe browserSync.stream()
       
 exports['VendorJs'] =  (cb)->
-    console.log "VendorJs",process.env.PWD,nodeModules
+    #console.log "VendorJs",process.env.PWD,nodeModules
     gulp.src([
         "#{nodeModules}/jquery/dist/jquery.js"
         "#{nodeModules}/asap/asap.js"
@@ -256,7 +253,6 @@ exports['VendorJs'] =  (cb)->
      .pipe wrapCommonJS 
        pathModifier: (fp)->
          fp = (fp.match /.*node_modules\/(.*)/)[1]
-         console.log "FILENAME=",fp
          return fp
        #relativePath:'../../cambodia/bamboosnow/node_modules'
      .pipe(concat "assets/js/vendor.js")
@@ -294,7 +290,6 @@ exports['Assets'] = (cb)->
 
 exports['Css'] = do (site) -> return (cb)->
     console.log site, "performing CSS into #{sitePublic}"
-    console.log "#{nodeModules}/ace-css/css/ace.min.css"
     a=gulp.src([
         "#{nodeModules}/blaze/scss/dist/blaze.min.css",
         "#{nodeModules}/ace-css/css/ace.min.css",
@@ -311,7 +306,6 @@ exports['Css'] = do (site) -> return (cb)->
         .pipe gulp.dest sitePublic
         )
     pfs(a).then( b).then ()->
-      console.log "#{sitePublic}/assets/css/app.css"
       console.log("DONECSS")
       cb() if cb
     
@@ -330,7 +324,7 @@ initBrowserSync = (done)->
   browserSync.init
     server:
       baseDir: sitePublic
-    logLevel: "debug"
+    logLevel: "default"
     port: 3000
     localOnly: false
     notify: true
